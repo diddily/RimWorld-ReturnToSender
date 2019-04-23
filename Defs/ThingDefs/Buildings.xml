@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+  <ThingDef ParentName="BuildingBase">
+    <defName>RTS_CorpsePod</defName>
+    <thingClass>ReturnToSender.Buildings.Building_CorpsePod</thingClass>
+    <label>corpse pod</label>
+    <description>A stripped down transport pod that consists of a rocket nozzle and a fabric/leather bag to hold the bodies of those slain to be sent to others as a message.</description>
+    <graphicData>
+      <texPath>Things/Buildings/CorpsePodBag3</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>(2,2)</drawSize>
+    </graphicData>
+    <size>(1,1)</size>
+    <rotatable>false</rotatable>
+    <tickerType>Normal</tickerType>
+    <altitudeLayer>BuildingOnTop</altitudeLayer>
+    <passability>PassThroughOnly</passability>
+    <castEdgeShadows>false</castEdgeShadows>
+    <drawerType>RealtimeOnly</drawerType>
+    <fillPercent>0.5</fillPercent>
+    <designationCategory>Misc</designationCategory>
+    <terrainAffordanceNeeded>Medium</terrainAffordanceNeeded>
+    <statBases>
+      <MaxHitPoints>150</MaxHitPoints>
+      <WorkToBuild>1000</WorkToBuild>
+      <Flammability>1.0</Flammability>
+    </statBases>
+    <costStuffCount>40</costStuffCount>
+    <costList>
+      <Steel>20</Steel>
+    </costList>
+    <stuffCategories>
+      <li>Fabric</li>
+      <li>Leathery</li>
+    </stuffCategories>
+    <comps>
+      <li Class="CompProperties_Transporter">
+        <restEffectiveness>0.1</restEffectiveness>
+        <massCapacity>300</massCapacity>
+      </li>
+      <li Class="CompProperties_Launchable" />
+    </comps>
+    <inspectorTabs>
+      <li>ITab_TransporterContents</li>
+    </inspectorTabs>
+    <placeWorkers>
+      <li>PlaceWorker_NeedsFuelingPort</li>
+      <li>PlaceWorker_NotUnderRoof</li>
+    </placeWorkers>
+		<researchPrerequisites>
+			<li>TransportPod</li>
+		</researchPrerequisites>
+    <constructionSkillPrerequisite>4</constructionSkillPrerequisite>
+    <uiIconScale>0.65</uiIconScale>
+  </ThingDef>
+
+  <ThingDef>
+    <defName>RTS_ActiveCorpsePod</defName>
+    <label>corpse pod</label>
+    <category>Item</category>
+    <thingClass>ReturnToSender.ActiveCorpsePod</thingClass>
+    <scatterableOnMapGen>false</scatterableOnMapGen>
+    <tickerType>Normal</tickerType>
+    <graphicData>
+      <texPath>Things/Buildings/CorpsePodBag0</texPath>
+      <graphicClass>Graphic_Single</graphicClass>
+      <drawSize>1.9</drawSize>
+      <shadowData>
+        <volume>(0.8, 0.6, 0.8)</volume>
+      </shadowData>
+    </graphicData>
+    <altitudeLayer>Building</altitudeLayer>
+    <blockWind>true</blockWind>
+    <useHitPoints>true</useHitPoints>
+    <statBases>
+      <MaxHitPoints>500</MaxHitPoints>
+      <Flammability>0</Flammability>
+    </statBases>
+    <selectable>true</selectable>
+    <stuffCategories>
+      <li>Fabric</li>
+      <li>Leathery</li>
+    </stuffCategories>
+    <drawerType>RealtimeOnly</drawerType>
+  </ThingDef>
+
+  <ThingDef ParentName="SkyfallerBase">
+    <defName>RTS_CorpsePodIncoming</defName>
+    <label>corpse pod (incoming)</label>
+    <thingClass>ReturnToSender.CorpsePodIncoming</thingClass>
+    <skyfaller>
+      <movementType>Accelerate</movementType>
+      <shadow>Things/Skyfaller/SkyfallerShadowDropPod</shadow>
+      <shadowSize>(2, 2)</shadowSize>
+      <anticipationSound>RTS_CorpsePod_Fall</anticipationSound>
+      <anticipationSoundTicks>100</anticipationSoundTicks>
+      <rotateGraphicTowardsDirection>true</rotateGraphicTowardsDirection>
+      <motesPerCell>0</motesPerCell>
+      <rubbleShrapnelCountRange>
+        <min>-40</min>
+        <max>-20</max>
+      </rubbleShrapnelCountRange>
+      <metalShrapnelCountRange>
+        <min>-10</min>
+        <max>-6</max>
+      </metalShrapnelCountRange>
+    </skyfaller>
+    <stuffCategories>
+      <li>Fabric</li>
+      <li>Leathery</li>
+    </stuffCategories>
+    <drawerType>RealtimeOnly</drawerType>
+  </ThingDef>
+
+  <ThingDef ParentName="SkyfallerBase">
+    <defName>RTS_CorpsePodLeaving</defName>
+    <label>corpse pod (leaving)</label>
+    <thingClass>ReturnToSender.CorpsePodLeaving</thingClass>
+    <skyfaller>
+      <movementType>Decelerate</movementType>
+      <reversed>true</reversed>
+      <shadow>Things/Skyfaller/SkyfallerShadowDropPod</shadow>
+      <shadowSize>(2, 2)</shadowSize>
+      <anticipationSound>RTS_CorpsePod_Leaving</anticipationSound>
+      <anticipationSoundTicks>-10</anticipationSoundTicks>
+      <ticksToImpactRange>
+        <min>-40</min>
+        <max>-15</max>
+      </ticksToImpactRange>
+    </skyfaller>
+    <stuffCategories>
+      <li>Fabric</li>
+      <li>Leathery</li>
+    </stuffCategories>
+  </ThingDef>
+
+</Defs>

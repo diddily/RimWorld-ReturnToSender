@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<LanguageData>
+  <RTS_MessageTransporterTypesInvalid>Cannot mix corpse pods with other types of transport pods.</RTS_MessageTransporterTypesInvalid>
+  <RTS_GiveBodiesViaCorpsePods>Send corpses as an insult to {0} ({1})</RTS_GiveBodiesViaCorpsePods>
+
+  <RTS_MessageTransportPodsArrived>Your corpse pods have arrived.</RTS_MessageTransportPodsArrived>
+  <RTS_MessageTransportPodsArrivedAndLost>Your corpse pods have arrived, but since there were no (living) colonists around, the contents are lost.</RTS_MessageTransportPodsArrivedAndLost>
+  <RTS_MessageTransportPodsArrivedAndAddedToCaravan>Your corpse pods have arrived. The contents have been added to {0}.</RTS_MessageTransportPodsArrivedAndAddedToCaravan>
+
+  <RTS_GoodwillChangedReason_ReceivedGift>received corpses</RTS_GoodwillChangedReason_ReceivedGift>
+  <RTS_MessageGiftGivenButNotAppreciated>{0} got your corpses but they don't seem bothered by it.</RTS_MessageGiftGivenButNotAppreciated>
+</LanguageData>

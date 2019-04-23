@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+	<ThoughtDef>
+		<defName>RTS_SameFactionCorpse</defName>
+		<durationDays>6</durationDays>
+		<stackLimit>20</stackLimit>
+		<stackedEffectMultiplier>0.95</stackedEffectMultiplier>
+		<nullifyingTraits>
+			<li>Psychopath</li>
+		</nullifyingTraits>
+		<stages>
+			<li>
+				<label>faction corpse dropped on us</label>
+				<description>We had a faction member sent back to us in a corpse pod.</description>
+				<baseMoodEffect>-2.5</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+	
+	<ThoughtDef>
+		<defName>RTS_SentIntactCorpse0</defName>
+		<durationDays>2</durationDays>
+		<stackLimit>50</stackLimit>
+		<stackedEffectMultiplier>0.925</stackedEffectMultiplier>
+		<nullifyingTraits>
+			<li>Psychopath</li>
+			<li>Bloodlust</li>
+			<li>Cannibal</li>
+		</nullifyingTraits>
+		<stages>
+			<li>
+				<label>intact corpse dropped on us</label>
+				<description>We had a body dropped on us in a corpse pod.</description>
+				<baseMoodEffect>-2</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+	
+	<ThoughtDef>
+		<defName>RTS_SentIntactCorpse1</defName>
+		<durationDays>2</durationDays>
+		<stackLimit>50</stackLimit>
+		<stackedEffectMultiplier>0.925</stackedEffectMultiplier>
+		<requiredTraits>
+			<li>Cannibal</li>
+		</requiredTraits>
+		<stages>
+			<li>
+				<label>intact corpse dropped on us</label>
+				<description>We recieved manna from the heavens.</description>
+				<baseMoodEffect>2</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+	
+	<ThoughtDef>
+		<defName>RTS_SentGibletCorpse0</defName>
+		<durationDays>3</durationDays>
+		<stackLimit>40</stackLimit>
+		<stackedEffectMultiplier>0.83333</stackedEffectMultiplier>
+		<nullifyingTraits>
+			<li>Psychopath</li>
+			<li>Bloodlust</li>
+			<li>Cannibal</li>
+		</nullifyingTraits>
+		<stages>
+			<li>
+				<label>mangled corpse dropped on us</label>
+				<description>We had a body dropped on us in a corpse pod and it exploded into giblets.</description>
+				<baseMoodEffect>-4</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+	
+	<ThoughtDef>
+		<defName>RTS_SentGibletCorpse1</defName>
+		<durationDays>3</durationDays>
+		<stackLimit>40</stackLimit>
+		<stackedEffectMultiplier>0.8333</stackedEffectMultiplier>
+		<requiredTraits>
+			<li>Cannibal</li>
+		</requiredTraits>
+		<stages>
+			<li>
+				<label>mangled corpse dropped on us</label>
+				<description>We recieved ready to eat manna from the heavens.</description>
+				<baseMoodEffect>4</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+	
+	<ThoughtDef>
+		<defName>RTS_SentGibletCorpse2</defName>
+		<durationDays>3</durationDays>
+		<stackLimit>40</stackLimit>
+		<stackedEffectMultiplier>0.8333</stackedEffectMultiplier>
+		<requiredTraits>
+			<li>Bloodlust</li>
+		</requiredTraits>
+		<stages>
+			<li>
+				<label>mangled corpse dropped on us</label>
+				<description>Bloody bits everywhere makes me happy!</description>
+				<baseMoodEffect>4</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+	
+	<ThoughtDef>
+		<defName>RTS_SentVaporizedCorpse0</defName>
+		<durationDays>4</durationDays>
+		<stackLimit>10</stackLimit>
+		<stackedEffectMultiplier>0.9</stackedEffectMultiplier>
+		<nullifyingTraits>
+			<li>Psychopath</li>
+			<li>Bloodlust</li>
+			<li>Cannibal</li>
+		</nullifyingTraits>
+		<stages>
+			<li>
+				<label>vaporized corpse dropped on us</label>
+				<description>We had a body dropped on us in a corpse pod and it was vaporized into a mist of blood...</description>
+				<baseMoodEffect>-6</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+	<ThoughtDef>
+		<defName>RTS_SentVaporizedCorpse1</defName>
+		<durationDays>4</durationDays>
+		<stackLimit>9</stackLimit>
+		<stackedEffectMultiplier>0.9</stackedEffectMultiplier>
+		<requiredTraits>
+			<li>Cannibal</li>
+		</requiredTraits>
+		<stages>
+			<li>
+				<label>vaporized corpse dropped on us</label>
+				<description>What a waste of a perfectly good meal</description>
+				<baseMoodEffect>-8</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+	<ThoughtDef>
+		<defName>RTS_SentVaporizedCorpse2</defName>
+		<durationDays>4</durationDays>
+		<stackLimit>9</stackLimit>
+		<stackedEffectMultiplier>0.9</stackedEffectMultiplier>
+		<requiredTraits>
+			<li>Bloodlust</li>
+		</requiredTraits>
+		<stages>
+			<li>
+				<label>vaporized corpse dropped on us</label>
+				<description>Bloooooooooooooooooooooood!</description>
+				<baseMoodEffect>8</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+</Defs>

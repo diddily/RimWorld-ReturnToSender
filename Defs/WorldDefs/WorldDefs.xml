@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <WorldObjectDef>
+    <defName>RTS_TravelingCorpsePods</defName>
+    <label>Corpse pods</label>
+    <description>Corpse pods in flight.</description>
+    <worldObjectClass>TravelingTransportPods</worldObjectClass>
+    <texture>World/WorldObjects/TravelingTransportPods</texture>
+    <useDynamicDrawer>true</useDynamicDrawer>
+    <expandingIcon>true</expandingIcon>
+    <expandingIconTexture>World/WorldObjects/Expanding/TravelingTransportPods</expandingIconTexture>
+    <expandingIconPriority>60</expandingIconPriority>
+    <expandMore>true</expandMore>
+    <allowCaravanIncidentsWhichGenerateMap>true</allowCaravanIncidentsWhichGenerateMap>
+  </WorldObjectDef>
+</Defs>
