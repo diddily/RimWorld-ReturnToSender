@@ -750,6 +750,8 @@ namespace ReturnToSender
                         spawnedInfo.StepDecomp(tick, Find.World.tileTemperatures.OutdoorTemperatureAt(map.Tile, tick));
                     }
                 }
+
+                ReturnToSender.Instance.GetSentCorpsePodsStorage().RemoveAllPodInfoForTile(map.Tile);
             }
             
             Current.ProgramState = programState;
