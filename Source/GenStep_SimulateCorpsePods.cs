@@ -11,11 +11,11 @@ using Verse;
 
 namespace ReturnToSender
 {
-    class GenStep_SimulateCorpsePods
-    {
-        public static void Generate(Map map, GenStepParams parms)
-        {
+	class GenStep_SimulateCorpsePods
+	{
+		public static void Generate(Map map, GenStepParams parms)
+		{
 
-        }
-    }
+		}
+	}
 }

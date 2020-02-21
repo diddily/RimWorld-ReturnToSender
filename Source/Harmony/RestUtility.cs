@@ -9,15 +9,15 @@ using Verse;
 
 namespace ReturnToSender.Harmony
 {
-    [HarmonyPatch(typeof(RestUtility), "CurrentBed")]
-    static class RestUtility_CurrentBed
-    {
-        public static void Postfix(ref Building_Bed __result, Pawn p)
-        {
-           if (__result == null && ColonySimulation.CurrentSimulation != null)
-            {
-                __result = ColonySimulation.CurrentSimulation.GetPawnBed(p);
-            }
-        }
-    }
+	[HarmonyPatch(typeof(RestUtility), "CurrentBed")]
+	static class RestUtility_CurrentBed
+	{
+		public static void Postfix(ref Building_Bed __result, Pawn p)
+		{
+			if (__result == null && ColonySimulation.CurrentSimulation != null)
+			{
+				__result = ColonySimulation.CurrentSimulation.GetPawnBed(p);
+			}
+		}
+	}
 }

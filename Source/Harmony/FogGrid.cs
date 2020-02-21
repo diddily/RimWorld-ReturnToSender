@@ -9,17 +9,17 @@ using Verse;
 
 namespace ReturnToSender.Harmony
 {
-    [HarmonyPatch(typeof(FogGrid), "Notify_FogBlockerRemoved")]
-    static class FogGrid_Notify_FogBlockerRemoved
-    {
-        public static bool Prefix()
-        {
-            if (ColonySimulation.CurrentSimulation != null)
-            {
-                return false;
-            }
+	[HarmonyPatch(typeof(FogGrid), "Notify_FogBlockerRemoved")]
+	static class FogGrid_Notify_FogBlockerRemoved
+	{
+		public static bool Prefix()
+		{
+			if (ColonySimulation.CurrentSimulation != null)
+			{
+				return false;
+			}
 
-            return true;
-        }
-    }
+			return true;
+		}
+	}
 }
