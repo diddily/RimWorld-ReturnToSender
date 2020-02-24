@@ -33,5 +33,14 @@ namespace ReturnToSender
 		public static ThoughtDef RTS_SentVaporizedCorpse0;
 		public static ThoughtDef RTS_SentVaporizedCorpse1;
 		public static ThoughtDef RTS_SentVaporizedCorpse2;
+
+		public static ThoughtDef RTS_AnnoyedByCorpse;
+
+		public static ThoughtDef RTS_CleanedOkayCorpse;
+		public static ThoughtDef RTS_CleanedGrossCorpse;
+		public static ThoughtDef RTS_CleanedPutridCorpse;
+
+		public static ThoughtDef RTS_ObservedLayingGibletCorpse;
+		public static ThoughtDef RTS_ObservedLayingVaporizedCorpse;
 	}
 }

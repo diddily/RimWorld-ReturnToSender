@@ -2,6 +2,8 @@
 <Defs>
 	<ThoughtDef>
 		<defName>RTS_SameFactionCorpse</defName>
+		
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
 		<durationDays>6</durationDays>
 		<stackLimit>20</stackLimit>
 		<stackedEffectMultiplier>0.95</stackedEffectMultiplier>
@@ -19,6 +21,8 @@
 	
 	<ThoughtDef>
 		<defName>RTS_SentIntactCorpse0</defName>
+		
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
 		<durationDays>2</durationDays>
 		<stackLimit>50</stackLimit>
 		<stackedEffectMultiplier>0.925</stackedEffectMultiplier>
@@ -38,6 +42,8 @@
 	
 	<ThoughtDef>
 		<defName>RTS_SentIntactCorpse1</defName>
+		
+		<icon>Things/Mote/ThoughtSymbol/Food</icon>
 		<durationDays>2</durationDays>
 		<stackLimit>50</stackLimit>
 		<stackedEffectMultiplier>0.925</stackedEffectMultiplier>
@@ -55,6 +61,8 @@
 	
 	<ThoughtDef>
 		<defName>RTS_SentGibletCorpse0</defName>
+		
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
 		<durationDays>3</durationDays>
 		<stackLimit>40</stackLimit>
 		<stackedEffectMultiplier>0.83333</stackedEffectMultiplier>
@@ -67,13 +75,15 @@
 			<li>
 				<label>mangled corpse dropped on us</label>
 				<description>We had a body dropped on us in a corpse pod and it exploded into giblets.</description>
-				<baseMoodEffect>-4</baseMoodEffect>
+				<baseMoodEffect>-3</baseMoodEffect>
 			</li>
 		</stages>
 	</ThoughtDef>
 	
 	<ThoughtDef>
 		<defName>RTS_SentGibletCorpse1</defName>
+		
+		<icon>Things/Mote/ThoughtSymbol/Food</icon>
 		<durationDays>3</durationDays>
 		<stackLimit>40</stackLimit>
 		<stackedEffectMultiplier>0.8333</stackedEffectMultiplier>
@@ -84,13 +94,14 @@
 			<li>
 				<label>mangled corpse dropped on us</label>
 				<description>We recieved ready to eat manna from the heavens.</description>
-				<baseMoodEffect>4</baseMoodEffect>
+				<baseMoodEffect>3</baseMoodEffect>
 			</li>
 		</stages>
 	</ThoughtDef>
 	
 	<ThoughtDef>
 		<defName>RTS_SentGibletCorpse2</defName>
+		
 		<durationDays>3</durationDays>
 		<stackLimit>40</stackLimit>
 		<stackedEffectMultiplier>0.8333</stackedEffectMultiplier>
@@ -101,16 +112,18 @@
 			<li>
 				<label>mangled corpse dropped on us</label>
 				<description>Bloody bits everywhere makes me happy!</description>
-				<baseMoodEffect>4</baseMoodEffect>
+				<baseMoodEffect>3</baseMoodEffect>
 			</li>
 		</stages>
 	</ThoughtDef>
 	
 	<ThoughtDef>
 		<defName>RTS_SentVaporizedCorpse0</defName>
+		
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
 		<durationDays>4</durationDays>
 		<stackLimit>10</stackLimit>
-		<stackedEffectMultiplier>0.9</stackedEffectMultiplier>
+		<stackedEffectMultiplier>0.8</stackedEffectMultiplier>
 		<nullifyingTraits>
 			<li>Psychopath</li>
 			<li>Bloodlust</li>
@@ -120,16 +133,17 @@
 			<li>
 				<label>vaporized corpse dropped on us</label>
 				<description>We had a body dropped on us in a corpse pod and it was vaporized into a mist of blood...</description>
-				<baseMoodEffect>-6</baseMoodEffect>
+				<baseMoodEffect>-5</baseMoodEffect>
 			</li>
 		</stages>
 	</ThoughtDef>
 
 	<ThoughtDef>
 		<defName>RTS_SentVaporizedCorpse1</defName>
-		<durationDays>4</durationDays>
+		
+		<durationDays>2</durationDays>
 		<stackLimit>9</stackLimit>
-		<stackedEffectMultiplier>0.9</stackedEffectMultiplier>
+		<stackedEffectMultiplier>0.8</stackedEffectMultiplier>
 		<requiredTraits>
 			<li>Cannibal</li>
 		</requiredTraits>
@@ -144,9 +158,10 @@
 
 	<ThoughtDef>
 		<defName>RTS_SentVaporizedCorpse2</defName>
+		
 		<durationDays>4</durationDays>
 		<stackLimit>9</stackLimit>
-		<stackedEffectMultiplier>0.9</stackedEffectMultiplier>
+		<stackedEffectMultiplier>0.8</stackedEffectMultiplier>
 		<requiredTraits>
 			<li>Bloodlust</li>
 		</requiredTraits>
@@ -155,6 +170,124 @@
 				<label>vaporized corpse dropped on us</label>
 				<description>Bloooooooooooooooooooooood!</description>
 				<baseMoodEffect>8</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+	<ThoughtDef>
+		<defName>RTS_AnnoyedByCorpse</defName>
+		
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
+		<durationDays>2</durationDays>
+		<stackLimit>150</stackLimit>
+		<stackedEffectMultiplier>1.015</stackedEffectMultiplier>
+		<nullifyingTraits>
+			<li>Bloodlust</li>
+			<li>Cannibal</li>
+		</nullifyingTraits>
+		<stages>
+			<li>
+				<label>have to deal with corpse dropped on us</label>
+				<description>We are going to have to clean up this mess...</description>
+				<baseMoodEffect>-0.25</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+	<ThoughtDef>
+		<defName>RTS_CleanedOkayCorpse</defName>
+		
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
+		<durationDays>1</durationDays>
+		<stackLimit>3</stackLimit>
+		<stackedEffectMultiplier>0.75</stackedEffectMultiplier>
+		<nullifyingTraits>
+			<li>Bloodlust</li>
+		</nullifyingTraits>
+		<stages>
+			<li>
+				<label>cleaned corpse</label>
+				<description>I had to clean a corpse up. It was disturbing.</description>
+				<baseMoodEffect>-4</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+	<ThoughtDef>
+		<defName>RTS_CleanedGrossCorpse</defName>
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
+		
+		<durationDays>1.5</durationDays>
+		<stackLimit>7</stackLimit>
+		<stackedEffectMultiplier>0.75</stackedEffectMultiplier>
+		<nullifyingTraits>
+			<li>Bloodlust</li>
+		</nullifyingTraits>
+		<stages>
+			<li>
+				<label>cleaned corpse</label>
+				<description>I had to clean a gross corpse up. It was disgusting.</description>
+				<baseMoodEffect>-8</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+	<ThoughtDef>
+		<defName>RTS_CleanedPutridCorpse</defName>
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
+		
+		<durationDays>2</durationDays>
+		<stackLimit>10</stackLimit>
+		<stackedEffectMultiplier>0.75</stackedEffectMultiplier>
+		<stages>
+			<li>
+				<label>cleaned corpse</label>
+				<description>I had to clean a putrid corpse up. I don't think I will ever feel clean again.</description>
+				<baseMoodEffect>-12</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+	<ThoughtDef>
+		<defName>RTS_ObservedLayingGibletCorpse</defName>
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
+		<showBubble>true</showBubble>
+		
+		<durationDays>0.5</durationDays>
+		<stackedEffectMultiplier>0.5</stackedEffectMultiplier>
+		<stackLimit>5</stackLimit>
+		<nullifyingTraits>
+			<li>Psychopath</li>
+			<li>Bloodlust</li>
+			<li>Cannibal</li>
+		</nullifyingTraits>
+		<stages>
+			<li>
+				<label>observed mangled corpse</label>
+				<description>I saw a mangled corpse laying on the ground. I could barely recognize it as human.</description>
+				<baseMoodEffect>-6</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+	<ThoughtDef>
+		<defName>RTS_ObservedLayingVaporizedCorpse</defName>
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
+		<showBubble>true</showBubble>
+		
+		<durationDays>0.5</durationDays>
+		<stackedEffectMultiplier>0.5</stackedEffectMultiplier>
+		<stackLimit>5</stackLimit>
+		<nullifyingTraits>
+			<li>Psychopath</li>
+			<li>Bloodlust</li>
+			<li>Cannibal</li>
+		</nullifyingTraits>
+		<stages>
+			<li>
+				<label>observed vaporized corpse</label>
+				<description>I saw a spray of blood that was all that remained of a body. What a mess!</description>
+				<baseMoodEffect>-6</baseMoodEffect>
 			</li>
 		</stages>
 	</ThoughtDef>

@@ -47,7 +47,7 @@ namespace ReturnToSender
 				Vector3 loc = base.Position.ToVector3Shifted() + Gen.RandomHorizontalVector(1f);
 				if (!loc.ShouldSpawnMotesAt(Map) || Map.moteCounter.SaturatedLowPriority)
 				{
-					return;
+					continue;
 				}
 				MoteThrown moteThrown = (MoteThrown)ThingMaker.MakeThing(RTS_DefOf.RTS_Mote_Giblets, null);
 				moteThrown.Scale = 1.9f * 0.2f;

@@ -66,11 +66,13 @@
     <Compile Include="Harmony\ActiveDropPodInfo.cs" />
     <Compile Include="Harmony\Command_LoadToTransporter.cs" />
     <Compile Include="Harmony\CompLaunchable.cs" />
+    <Compile Include="Harmony\DamageFlasher.cs" />
     <Compile Include="Harmony\Dialog_LoadTransporters.cs" />
     <Compile Include="Harmony\DropPodUtility.cs" />
     <Compile Include="Harmony\FactionGiftUtility.cs" />
     <Compile Include="Harmony\GenStep_Outpost.cs" />
     <Compile Include="Harmony\FogGrid.cs" />
+    <Compile Include="Harmony\MoteMaker.cs" />
     <Compile Include="Harmony\Projectile_Explosive.cs" />
     <Compile Include="Harmony\SkyfallerMaker.cs" />
     <Compile Include="Harmony\RestUtility.cs" />

@@ -9,4 +9,52 @@
 
   <RTS_GoodwillChangedReason_ReceivedGift>received corpses</RTS_GoodwillChangedReason_ReceivedGift>
   <RTS_MessageGiftGivenButNotAppreciated>{0} got your corpses but they don't seem bothered by it.</RTS_MessageGiftGivenButNotAppreciated>
+
+  <RTS_Settlement>settlement</RTS_Settlement>
+  <RTS_Outpost>outpost</RTS_Outpost>
+  
+  <RTS_Story_Annihilation_Active_0>This {0} was completely devastated by the effects of corpses being launched into the surrounding area.
+
+With an overwhelming stench of death, this {0} will be lost to time and ruin.
+
+There is nothing here anymore...</RTS_Story_Annihilation_Active_0>
+  
+  <RTS_Story_Annihilation_Active_1>Your colonists enter the wreckage of a {0} that had been heavily barraged by your colonists. They gazed around them, their ears giving attention to their surroundings, but there was only silence. 
+
+Nothing of the {0} that was once here remains, no laughter, no tears, just the rotting bodies of the past on the blood stained {1} that rest beneath them. The decaying bodies have been chipped away by the animals that have roamed the area. The constructions are half built, smashed into by the ones that had their minds broken by the onslaught. 
+
+The {0} that once blossomed in this land are no more, they have perished due to the effects of your colonists.</RTS_Story_Annihilation_Active_1>
+
+  <RTS_Story_Annihilation_Active_2>Your colonists arrive to a quiet {0}, its too quiet. They look around, feeling the wind caress their ears. They are on alert for any enemies that maybe around, but there are none to be seen, they are safe.
+
+The {0} that lays in waste in front of them is covered by the many bodies sent from the sky. Bodies of the dead rest upon the ground, turning it red, as if water had been replaced with blood to nourish the land and whatever plant life dares to grow in this desolate place. 
+    
+The buildings contain only fragments of what had been here, rooms are filled with beds, benches, and resources that have yet to be touched and will never be touched. The {0} your colonists have entered has been annihilated by their efforts.</RTS_Story_Annihilation_Active_2>
+
+  <RTS_Story_Annihilation_Active_3>Your colonists arrive and gaze upon an open area, listening to their surroundings, keeping alert for enemies that may want to harm them, but there are none. The land in front of them is completely silent. Their ears can only feel the wind caress their ears as they step on the blood stained path. 
+
+The buildings are unprotected, guards are non existent, the smell of worm-eaten bodies is the only defense this {0} raises against your colonists. Fragments of the past lay around the village, unused resources, broken walls, and blighted plants. 
+
+The people of this land have been annihilated due to the efforts of your colonists.</RTS_Story_Annihilation_Active_3>
+  
+  <RTS_Story_NoDamage_Active_0>Your colonists arrive at a {0} that has recently been barraged by dead bodies, yet it does not seem as if they were attacked, it seems... normal. The {0} still has life, many of the colonists are calmly cleaning the bodies around the area or making use of them. The colonists are unaffected by the recent attack that your colonists had initiated, only time will tell how strong minded they will remain in the future.</RTS_Story_NoDamage_Active_0>
+  <RTS_Story_NoDamage_Inactive_0>Your colonists enter a {0} that had been lightly barraged by dead bodies. Regardless of this surprise attack by your colonists, their efforts to detract the settlement has failed. The settlers are completely unharmed, entering the settlement, the colonist can see a well function society, all doing their part of the share, growing slowly, but growing regardless of their hardships that they have just faced from your colonists.</RTS_Story_NoDamage_Inactive_0>
+  <RTS_Story_NoDamage_Inactive_1>This {0} was recently affected by corpses being launched into the surrounding area. Nothing appears to have changed in the inhabitant's routine.</RTS_Story_NoDamage_Inactive_1>
+	<RTS_Story_NoDamage_Inactive_2>Your colonists have entered a {0} recently attacked by them. The {0} seems normal, as if everything your colonists had done has been forgotten, it is like nothing ever happened. Colonists are running around, maintaining their base, building up their security, and living life day by day along side their follow allies. This {0} is unharmed by the recent attacks but only time will tell how they will react to future attacks and damages to their {0}.</RTS_Story_NoDamage_Inactive_2>
+
+  
+  <RTS_Story_MildDamage_Active_0>This {0} was recently affected by corpses being launched into the surrounding area. There is some disarray among the inhabitants. Some citizens are hurling up their meals, while others are carrying away putrid corpses with disgusted, and gagged looks.</RTS_Story_MildDamage_Active_0>
+  <RTS_Story_MildDamage_Inactive_0>[PLACEHOLDER] Mild damage done, cleanup complete.</RTS_Story_MildDamage_Inactive_0>
+  <RTS_Story_MildDamage_MinorRecovery_0>This {0} was affected by corpses being launched into the surrounding area. The inhabitants appear mostly fine. Some citizens seem appear drained of their senses, still trying to process what had happened. The stink of corpses overcomes the general scent of the country side.</RTS_Story_MildDamage_MinorRecovery_0>
+
+  <RTS_Story_MediumDamage_Active_0>[PLACEHOLDER] Medium damage done, cleanup still active.</RTS_Story_MediumDamage_Active_0>
+  <RTS_Story_MediumDamage_Inactive_0>This {0} was recently affected by corpses being launched into the surrounding area. Worry and fear has set in for most of the inhabitants. A few bedrooms are left untouched as their owners disappeared into the night in fear of being the next corpse their cohorts will find crashing through the roof.</RTS_Story_MediumDamage_Inactive_0>
+  <RTS_Story_MediumDamage_MinorRecovery_0>[PLACEHOLDER] Medium damage done, minor recovery.</RTS_Story_MediumDamage_MinorRecovery_0>
+  <RTS_Story_MediumDamage_MajorRecovery_0>[PLACEHOLDER] Medium damage done, major/full recovery.</RTS_Story_MediumDamage_MajorRecovery_0>
+
+  <RTS_Story_MajorDamage_Active_0>This {0} was recently affected by corpses being launched into the surrounding area. There is mass hysteria for it's occupants. Many of the inhabitants have either ran away, puked themselves to death, or killed themselves fighting each other in delusional berserk mayhem while others that are still in healthy condition are fearfully hiding away in their rooms. Those that have tried to start recovery were beaten to death by their mentally broken peers.</RTS_Story_MajorDamage_Active_0>
+  <RTS_Story_MajorDamage_Inactive_0>[PLACEHOLDER] Major damage done, cleanup complete.</RTS_Story_MajorDamage_Inactive_0>
+  <RTS_Story_MajorDamage_MinorRecovery_0>[PLACEHOLDER] Major damage done, minor recovery.</RTS_Story_MajorDamage_MinorRecovery_0>
+  <RTS_Story_MajorDamage_MajorRecovery_0>[PLACEHOLDER] Major damage done, major recovery.</RTS_Story_MajorDamage_MajorRecovery_0>
+  <RTS_Story_MajorDamage_FullRecovery_0>[PLACEHOLDER] Major damage done, full recovery.</RTS_Story_MajorDamage_FullRecovery_0>
 </LanguageData>

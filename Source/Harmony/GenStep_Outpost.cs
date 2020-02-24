@@ -16,9 +16,12 @@ namespace ReturnToSender.Harmony
 	{
 		public static void Postfix(ref GenStep_Outpost __instance, Map map, GenStepParams parms)
 		{
-			Log.Message("Outpost: " + string.Join(",", map.mapPawns.AllPawnsSpawned.Select(p => p.ToString()).ToArray()));
+			if (ColonySimulation.Verbose)
+			{
+				Log.Message("Outpost: " + string.Join(",", map.mapPawns.AllPawnsSpawned.Select(p => p.ToString()).ToArray()));
+			}
 			ColonySimulation sim = new ColonySimulation(map, false);
-			sim.DoSimulation();
+			sim.DoSimulation(false);
 		}
 	}
 
@@ -27,9 +30,12 @@ namespace ReturnToSender.Harmony
 	{
 		public static void Postfix(ref GenStep_Settlement __instance, Map map, GenStepParams parms)
 		{
-			Log.Message("Settlement: " + string.Join(",", map.mapPawns.AllPawnsSpawned.Select(p => p.ToString()).ToArray()));
+			if (ColonySimulation.Verbose)
+			{
+				Log.Message("Settlement: " + string.Join(",", map.mapPawns.AllPawnsSpawned.Select(p => p.ToString()).ToArray()));
+			}
 			ColonySimulation sim = new ColonySimulation(map, true);
-			sim.DoSimulation();
+			sim.DoSimulation(true);
 		}
 	}
 }

@@ -18,11 +18,25 @@ namespace ReturnToSender
 {
 	public class ColonySimulation
 	{
+		static public bool _verbose = false;
+
+		static public bool Verbose
+		{
+			get { return _verbose || Prefs.DevMode; }
+			set { _verbose = value; }
+		}
+
+		static private float DamageLevelMinorRatio = 1.0f / 4.0f;
+		static private float DamageLevelMediumRatio = 2.0f / 3.0f;
+		static private float RecoveryLevelMinorRatio = 1.0f / 3.0f;
+		static private float RecoveryLevelMajorRatio = 2.0f / 3.0f;
 		static private double IdleChancePerBodyPerHourPlague = 0.0001333333333333333f;
+		static private float ChancePawnSeeksMedicalRestPerHour = 0.65f;
 		static private float RottenChancePlagueMult = 1.75f;
 		static private float DescChancePlagueMult = 0.5f;
 		static private float CleaningCorpseChancePlagueMult = 3f;
 		static private double IdleSickColonistChancePlague = 0.0084142527461614863098f;
+		static private float IdleChancePerBodyPerHourObserve = 0.01333333333333333f;
 		static private float DoctoringChancePlagueMult = 3f;
 		static private FieldInfo ticksUntilInfectField = AccessTools.Field(typeof(HediffComp_Infecter), "ticksUntilInfect");
 		static private FieldInfo ticksToImpactField = AccessTools.Field(typeof(Projectile), "ticksToImpact");
@@ -115,7 +129,70 @@ namespace ReturnToSender
 					return (1 - IdleChancePerBodyPerHourPlague * mult);
 				}
 			}
-		}
+
+			public ThoughtDef GetCleanupThought()
+			{
+				RotStage rot = corpse.GetRotStage();
+				if (rot == RotStage.Rotting)
+				{
+					if (status == CorpseStatus.Normal)
+					{
+						return RTS_DefOf.RTS_CleanedGrossCorpse;
+					}
+					else
+					{
+						return RTS_DefOf.RTS_CleanedPutridCorpse;
+					}
+				}
+				else if (rot == RotStage.Dessicated)
+				{
+					if (status == CorpseStatus.Normal)
+					{
+						return RTS_DefOf.RTS_CleanedOkayCorpse;
+					}
+					else
+					{
+						// Must have rotted since arrival. Gross.
+						return RTS_DefOf.RTS_CleanedPutridCorpse;
+					}
+				}
+				else
+				{
+					if (status == CorpseStatus.Normal)
+					{
+						return RTS_DefOf.RTS_CleanedOkayCorpse;
+					}
+					else
+					{
+						return RTS_DefOf.RTS_CleanedGrossCorpse;
+					}
+				}
+			}
+
+			public ThoughtDef GetObserveThought()
+			{
+				RotStage rot = corpse.GetRotStage();
+				if (status == CorpseStatus.Normal)
+				{
+					if (rot == RotStage.Fresh)
+					{
+						return ThoughtDefOf.ObservedLayingCorpse;
+					}
+					else
+					{
+						return ThoughtDefOf.ObservedLayingRottingCorpse;
+					}
+				}
+				else if (status == CorpseStatus.Giblets)
+				{
+					return RTS_DefOf.RTS_ObservedLayingGibletCorpse;
+				}
+				else
+				{
+					return RTS_DefOf.RTS_ObservedLayingVaporizedCorpse;
+				}
+			}
+		};
 
 		public enum PawnJobStatus
 		{
@@ -222,7 +299,7 @@ namespace ReturnToSender
 			{
 				get
 				{
-					return !pawn.Dead && !pawn.Downed && jobStatus != PawnJobStatus.RanAway;
+					return !(pawn.Dead  || pawn.Downed || jobStatus == PawnJobStatus.RanAway);
 				}
 			}
 
@@ -248,6 +325,36 @@ namespace ReturnToSender
 				{
 					return !IsUseless && jobStatus == PawnJobStatus.Idle;
 				}
+			}
+
+			public float GetPlagueSeverity()
+			{
+				Hediff plague = pawn?.health?.hediffSet?.GetFirstHediffOfDef(HediffDefOf.Plague);
+				if (plague != null)
+				{
+					return plague.Severity;
+				}
+				return 0;
+			}
+
+			public float GetPlagueImmunity()
+			{
+				var imm = pawn?.health?.immunity;
+				if (imm != null)
+				{
+					return imm.GetImmunity(HediffDefOf.Plague);
+				}
+				return 0;
+			}
+
+			public float GetPlagueTendQuality()
+			{
+				HediffComp_TendDuration tend = pawn?.health?.hediffSet?.GetFirstHediffOfDef(HediffDefOf.Plague)?.TryGetComp<HediffComp_TendDuration>();
+				if (tend != null)
+				{
+					return tend.tendQuality;
+				}
+				return 0.0f;
 			}
 
 			public void FightPawn(PawnInfo info)
@@ -377,15 +484,15 @@ namespace ReturnToSender
 					}
 					break;
 				case TechLevel.Industrial:
-					if (roll < 0.1f)
+					if (roll < 0.05f)
 					{
 						medicineDef = ThingDefOf.MedicineUltratech;
 					}
-					else if (roll < 0.75f)
+					else if (roll < 0.55f)
 					{
 						medicineDef = ThingDefOf.MedicineIndustrial;
 					}
-					else if (roll < 0.95f)
+					else if (roll < 0.9f)
 					{
 						medicineDef = ThingDefOf.MedicineHerbal;
 					}
@@ -471,6 +578,7 @@ namespace ReturnToSender
 			IntVec3 cell = IntVec3.Zero;
 			DropCellFinder.TryFindDropSpotNear(near, map, out cell, false, true);
 
+			int cleanupCorpses = 0;
 			for (int i = info.sentCorpses.Count - 1; i >= 0; i--)
 			{
 				Thing thing = info.sentCorpses[i];
@@ -503,6 +611,7 @@ namespace ReturnToSender
 								current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SameFactionCorpse, null);
 							}
 						}
+						cleanupCorpses++;
 					}
 
 					if (r < spray) // Blood spray
@@ -520,6 +629,7 @@ namespace ReturnToSender
 								}
 							}
 							currentCorpses.Add(new CorpseInfo(c, CorpseStatus.Vaporized, cleanupHours, info.tickLanded, cell));
+							cleanupCorpses++;
 						}
 						else
 						{
@@ -541,6 +651,7 @@ namespace ReturnToSender
 								}
 							}
 							currentCorpses.Add(new CorpseInfo(c, CorpseStatus.Giblets, cleanupHours, info.tickLanded, cell));
+							cleanupCorpses++;
 						}
 						else
 						{
@@ -559,12 +670,31 @@ namespace ReturnToSender
 							}
 						}
 						currentCorpses.Add(new CorpseInfo(c, CorpseStatus.Normal, cleanupHours, info.tickLanded, cell));
+						cleanupCorpses++;
+					}
+				}
+			}
+
+			foreach (Pawn p in map.mapPawns.SpawnedPawnsInFaction(map.ParentFaction).Where(p => p.story.traits.HasTrait(TraitDefOf.Psychopath) || p.story.traits.DegreeOfTrait(TraitDefOf.Industriousness) < 0))
+			{
+				if (p.needs != null && p.needs.mood != null && p.needs.mood.thoughts != null)
+				{
+					int mult = -p.story.traits.DegreeOfTrait(TraitDefOf.Industriousness);
+					if (p.story.traits.HasTrait(TraitDefOf.Psychopath))
+					{
+						mult++;
+					}
+					mult = Math.Min(mult, 150);
+					for (int i = 0; i < cleanupCorpses; i++)
+					{
+						p.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_AnnoyedByCorpse, null);
 					}
 				}
 			}
 		}
+			
 
-		public bool DoSimulation()
+		public bool DoSimulation(bool isSettlement)
 		{
 			if (currentPawns.Count() == 0)
 			{
@@ -601,153 +731,282 @@ namespace ReturnToSender
 				int firstTick = podInfos.First().tickLanded;
 				int currentTick = firstTick;
 				int numTicks = Find.TickManager.TicksAbs - currentTick;
-				int numHours = ((numTicks + (GenDate.TicksPerHour - 1)) / GenDate.TicksPerHour);
-				Log.Message("Num hours = " + numHours);
 				int podIndex = 0;
-				int hour = 0;
-				for (; hour < numHours; ++hour)
+				// 3.5 years of sim is about 10k loops, anything more than that sound insane.
+				if (numTicks > GenDate.TicksPerYear * 3.5)
 				{
-					currentTick += GenDate.TicksPerHour;
-					stepTicksGame = currentTick;
-					Find.TickManager.DebugSetTicksGame(stepTicksGame);
+					numTicks = (GenDate.TicksPerYear * 7) / 2;
+					firstTick = Find.TickManager.TicksAbs - numTicks;
+					currentTick = firstTick;
 					while (podIndex < podInfos.Count && podInfos[podIndex].tickLanded <= currentTick)
 					{
-						Log.Message( hour + ": added a pod with " + podInfos[podIndex].sentCorpses.Count() + ", now there are " + currentCorpses.Count());
-
-						DropPod(map, podInfos[podIndex]);
 						podIndex++;
 					}
-
-					if (!DoStep(hour) && podIndex >= podInfos.Count)
-					{
-						break;
-					}
 				}
-
-				Find.TickManager.DebugSetTicksGame(savedTicksGame);
-				Log.Message("After " + hour + " hours " + currentPawns.Count(pi => !pi.IsDeadOrGone) + " pawns survived out of " + currentPawns.Count() + " with " + currentCorpses.Count() + " left over.");
-				Log.Message("Pawns: " + String.Join(",", currentPawns.Select(pi => pi.pawn.ToString() + ": " + (pi.pawn.Dead ? "Dead" : pi.jobStatus.ToString())).ToArray()));
-				Log.Message("Corpses: " + String.Join(",", currentCorpses.Select(ci => ci.corpse.ToString() + ": " + (ci.carriedByInfo == null ? "NULL" : ci.carriedByInfo.ToString())).ToArray()));
-
-				freeStorage = new List<IntVec3>();
-				if (map == BaseGen.globalSettings.map)
+				if (podIndex < podInfos.Count)
 				{
-					foreach (IntVec3 current in BaseGen.globalSettings.mainRect)
+					int numHours = ((numTicks + (GenDate.TicksPerHour - 1)) / GenDate.TicksPerHour);
+					if (Verbose)
 					{
-						if (current.Standable(map) && current.GetFirstItem(map) == null && current.Roofed(map))
+						Log.Message("Num hours = " + numHours);
+					}
+					int hour = 0;
+					bool active = true;
+					for (; hour < numHours; ++hour)
+					{
+						currentTick += GenDate.TicksPerHour;
+						stepTicksGame = currentTick;
+						Find.TickManager.DebugSetTicksGame(stepTicksGame);
+						while (podIndex < podInfos.Count && podInfos[podIndex].tickLanded <= currentTick)
 						{
-							freeStorage.Add(current);
+							if (Verbose)
+							{
+								Log.Message(hour + ": added a pod with " + podInfos[podIndex].sentCorpses.Count() + ", now there are " + currentCorpses.Count());
+							}
+							DropPod(map, podInfos[podIndex]);
+							podIndex++;
 						}
-					}
 
-					freeStorage.Shuffle();
-				}
-
-				List<SpawnedInfo> spawnedStuff = new List<SpawnedInfo>();
-				if (currentPawns.Any(pi => !pi.IsDeadOrGone))
-				{
-					// Settlement health restores over time (after a cooldown)
-					currentTick += (int)Rand.Range(GenDate.TicksPerSeason * 0.9f, GenDate.TicksPerSeason * 1.3f);
-					while (currentTick < Find.TickManager.TicksAbs)
-					{
-						IEnumerable<PawnInfo> deadPawns = currentPawns.Where(pi => pi.IsDeadOrGone);
-						if (deadPawns.Count() == 0)
+						if (!DoStep(hour) && podIndex >= podInfos.Count)
 						{
+							active = false;
 							break;
 						}
-						PawnInfo lazurus = deadPawns.RandomElement();
-						Log.Message("Reviving: " + lazurus.pawn);
-						if (!lazurus.pawn.Dead)
-						{
-							lazurus.pawn.Kill(null);
-						}
-
-						ResurrectionUtility.Resurrect(lazurus.pawn);
-
-						lazurus.jobStatus = PawnJobStatus.Idle;
-						currentTick += (int) Rand.Range(GenDate.TicksPerDay * 1.25f, GenDate.TicksPerDay * 2.75f);
 					}
 
-					foreach (PawnInfo pi in currentPawns)
+					Find.TickManager.DebugSetTicksGame(savedTicksGame);
+					if (Verbose)
 					{
-						if (pi.pawn.Dead)
+						Log.Message("After " + hour + " hours " + currentPawns.Count(pi => !pi.IsDeadOrGone) + " pawns survived out of " + currentPawns.Count() + " with " + currentCorpses.Count() + " left over.");
+						Log.Message("Pawns: " + String.Join(",", currentPawns.Select(pi => pi.pawn.ToString() + ": " + (pi.pawn.Dead ? "Dead" : pi.jobStatus.ToString())).ToArray()));
+						Log.Message("Corpses: " + String.Join(",", currentCorpses.Select(ci => ci.corpse.ToString() + ": " + (ci.carriedByInfo == null ? "NULL" : ci.carriedByInfo.ToString())).ToArray()));
+					}
+					freeStorage = new List<IntVec3>();
+					if (map == BaseGen.globalSettings.map)
+					{
+						foreach (IntVec3 current in BaseGen.globalSettings.mainRect)
 						{
-							DropEverything(pi, ref spawnedStuff);
-
-							if (pi.corpseCleaned)
+							if (current.Standable(map) && current.GetFirstItem(map) == null && current.Roofed(map))
 							{
-								pi.pawn.Corpse.Destroy(DestroyMode.KillFinalize);
+								freeStorage.Add(current);
 							}
 						}
+
+						freeStorage.Shuffle();
 					}
 
-					if (originalLordJob != null)
+					int survivedCount = currentPawns.Count(pi => !pi.IsDeadOrGone);
+					int revivedCount = 0;
+					int totalCount = currentPawns.Count();
+					int lostCount = totalCount - survivedCount;
+					List<SpawnedInfo> spawnedStuff = new List<SpawnedInfo>();
+					if (currentPawns.Any(pi => !pi.IsDeadOrGone))
 					{
+						// Settlement health restores over time (after a cooldown)
+						currentTick += (int)Rand.Range(GenDate.TicksPerSeason * 0.9f, GenDate.TicksPerSeason * 1.3f);
+						while (currentTick < Find.TickManager.TicksAbs)
+						{
+							IEnumerable<PawnInfo> deadPawns = currentPawns.Where(pi => pi.IsDeadOrGone);
+							if (deadPawns.Count() == 0)
+							{
+								break;
+							}
+							PawnInfo lazurus = deadPawns.RandomElement();
+							if (Verbose)
+							{
+								Log.Message("Reviving: " + lazurus.pawn);
+							}
+							if (!lazurus.pawn.Dead)
+							{
+								lazurus.pawn.Kill(null);
+							}
+
+							ResurrectionUtility.Resurrect(lazurus.pawn);
+
+							revivedCount++;
+							lazurus.jobStatus = PawnJobStatus.Idle;
+							currentTick += (int)Rand.Range(GenDate.TicksPerDay * 1.25f, GenDate.TicksPerDay * 2.75f);
+						}
+
 						foreach (PawnInfo pi in currentPawns)
 						{
-							Lord lord = pi.pawn.GetLord();
-							if (lord != null)
+							if (pi.pawn.Dead)
 							{
-								lord.ownedPawns.Remove(pi.pawn);
+								DropEverything(pi, ref spawnedStuff);
+
+								if (pi.corpseCleaned)
+								{
+									pi.pawn.Corpse.Destroy(DestroyMode.KillFinalize);
+								}
 							}
 						}
-						IntVec3 center = (IntVec3)baseCenterField.GetValue(originalLordJob);
-						LordMaker.MakeNewLord(map.ParentFaction, new LordJob_DefendBase(map.ParentFaction, center), map, currentPawns.Where(pi => !pi.IsDeadOrGone).Select(pi => pi.pawn));
-					}
-				}
 
-				
-				foreach (CorpseInfo ci in currentCorpses)
-				{
-					if (ci.status == CorpseStatus.Vaporized)
-					{
-						FilthMaker.MakeFilth(ci.corpse.Position, map, ci.corpse.InnerPawn.RaceProps.BloodDef, ci.corpse.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(5, 8));
-						ci.corpse.Destroy(DestroyMode.KillFinalize);
-					}
-					else if (ci.status == CorpseStatus.Giblets)
-					{
-						FilthMaker.MakeFilth(ci.corpse.Position, map, ci.corpse.InnerPawn.RaceProps.BloodDef, ci.corpse.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(2, 3));
-						float eff = Rand.Range(0.5f, 0.7071067811865f);
-						Thing thing3 = null;
-						foreach (Thing pb in ci.corpse.InnerPawn.ButcherProducts(ci.corpse.InnerPawn, eff * eff))
+						if (originalLordJob != null)
 						{
-							GenPlace.TryPlaceThing(pb, ci.corpse.Position, map, ThingPlaceMode.Near, out thing3);
-							spawnedStuff.Add(new SpawnedInfo(thing3, ci.tick));
+							foreach (PawnInfo pi in currentPawns)
+							{
+								Lord lord = pi.pawn.GetLord();
+								if (lord != null)
+								{
+									lord.ownedPawns.Remove(pi.pawn);
+								}
+							}
+							IntVec3 center = (IntVec3)baseCenterField.GetValue(originalLordJob);
+							LordMaker.MakeNewLord(map.ParentFaction, new LordJob_DefendBase(map.ParentFaction, center), map, currentPawns.Where(pi => !pi.IsDeadOrGone).Select(pi => pi.pawn));
 						}
 					}
-					else
-					{
-						if (!ci.corpse.Spawned)
-						{
-							Thing thing2 = null;
-							GenPlace.TryPlaceThing(ci.corpse, ci.cell, map, ThingPlaceMode.Near, out thing2, delegate (Thing placedThing, int count)
-							{
 
-							}, null);
-							spawnedStuff.Add(new SpawnedInfo(thing2, ci.tick));
+
+					foreach (CorpseInfo ci in currentCorpses)
+					{
+						if (ci.status == CorpseStatus.Vaporized)
+						{
+							FilthMaker.MakeFilth(ci.cell, map, ci.corpse.InnerPawn.RaceProps.BloodDef, ci.corpse.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(5, 8));
+							ci.corpse.Destroy(DestroyMode.KillFinalize);
+						}
+						else if (ci.status == CorpseStatus.Giblets)
+						{
+							FilthMaker.MakeFilth(ci.cell, map, ci.corpse.InnerPawn.RaceProps.BloodDef, ci.corpse.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(2, 3));
+							float eff = Rand.Range(0.5f, 0.7071067811865f);
+							Thing thing3 = null;
+							foreach (Thing pb in ci.corpse.InnerPawn.ButcherProducts(ci.corpse.InnerPawn, eff * eff))
+							{
+								GenPlace.TryPlaceThing(pb, ci.cell, map, ThingPlaceMode.Near, out thing3);
+								spawnedStuff.Add(new SpawnedInfo(thing3, ci.tick));
+							}
 						}
 						else
 						{
-							spawnedStuff.Add(new SpawnedInfo(ci.corpse, ci.tick));
+							if (!ci.corpse.Spawned)
+							{
+								Thing thing2 = null;
+								GenPlace.TryPlaceThing(ci.corpse, ci.cell, map, ThingPlaceMode.Near, out thing2, delegate (Thing placedThing, int count)
+								{
+
+								}, null);
+								spawnedStuff.Add(new SpawnedInfo(thing2, ci.tick));
+							}
+							else
+							{
+								spawnedStuff.Add(new SpawnedInfo(ci.corpse, ci.tick));
+							}
+
+							FilthMaker.MakeFilth(ci.corpse.Position, map, ci.corpse.InnerPawn.RaceProps.BloodDef, ci.corpse.InnerPawn.LabelIndefinite(), 1);
 						}
-
-						FilthMaker.MakeFilth(ci.corpse.Position, map, ci.corpse.InnerPawn.RaceProps.BloodDef, ci.corpse.InnerPawn.LabelIndefinite(), 1);
 					}
-				}
 
-				foreach (PawnInfo pi in currentPawns.Where(pi => pi.jobStatus == PawnJobStatus.RanAway))
-				{
-					pi.pawn.DeSpawn();
-					pi.pawn.DestroyOrPassToWorld();
-				}
-				
-				deteriorationRateField.SetValue(map.steadyEnvironmentEffects, 1.0f);
-				float interval = GenDate.TicksPerDay / 36.0f;
-				for (int tick = firstTick; tick <= Find.TickManager.TicksAbs; tick = (int)(tick + interval))
-				{
-					foreach (SpawnedInfo spawnedInfo in spawnedStuff)
+					foreach (PawnInfo pi in currentPawns.Where(pi => pi.jobStatus == PawnJobStatus.RanAway))
 					{
-						spawnedInfo.StepDecomp(tick, Find.World.tileTemperatures.OutdoorTemperatureAt(map.Tile, tick));
+						if (pi.pawn.Spawned)
+						{
+							pi.pawn.DeSpawn();
+						}
+						pi.pawn.DestroyOrPassToWorld();
+					}
+
+					deteriorationRateField.SetValue(map.steadyEnvironmentEffects, 1.0f);
+					float interval = GenDate.TicksPerDay / 36.0f;
+					for (int tick = firstTick; tick <= Find.TickManager.TicksAbs; tick = (int)(tick + interval))
+					{
+						foreach (SpawnedInfo spawnedInfo in spawnedStuff)
+						{
+							spawnedInfo.StepDecomp(tick, Find.World.tileTemperatures.OutdoorTemperatureAt(map.Tile, tick));
+						}
+					}
+
+
+					string[] damageLevels = { "Annihilation", "NoDamage", "MildDamage", "MediumDamage", "MajorDamage" };
+					string[] phaseLevels = { "Active", "Inactive", "MinorRecovery", "MajorRecovery", "FullRecovery" };
+					int damageLevel;
+					int phaseLevel;
+
+					float lostRatio = ((float)lostCount) / totalCount;
+					float recoverRatio = (lostCount > 0 ? ((float)revivedCount) / lostCount : 1.0f);
+
+					if (lostRatio == 1.0f)
+					{
+						damageLevel = 0;
+					}
+					else if (lostRatio == 0.0f)
+					{
+						damageLevel = 1;
+					}
+					else if (lostRatio <= DamageLevelMinorRatio)
+					{
+						damageLevel = 2;
+					}
+					else if (lostRatio <= DamageLevelMediumRatio)
+					{
+						damageLevel = 3;
+					}
+					else
+					{
+						damageLevel = 4;
+					}
+
+					if (active)
+					{
+						phaseLevel = 0;
+					}
+					else if (recoverRatio == 0.0f)
+					{
+						phaseLevel = 1;
+					}
+					else if (recoverRatio == 1.0f)
+					{
+						phaseLevel = 4;
+					}
+					else if (recoverRatio <= RecoveryLevelMinorRatio)
+					{
+						phaseLevel = 2;
+					}
+					else
+					{
+						phaseLevel = 3;
+					}
+
+					phaseLevel = Math.Min(phaseLevel, damageLevel);
+
+					string storyFormatString = string.Format("RTS_Story_{0}_{1}_{2}", damageLevels[damageLevel], phaseLevels[phaseLevel], "{0}");
+					List<string> stories = new List<string>();
+					string story;
+					while (Translator.TryTranslate(string.Format(storyFormatString, stories.Count), out story))
+					{
+						stories.Add(story);
+					}
+
+					if (stories.Count > 0)
+					{
+						string colonyText;
+						if (isSettlement)
+						{
+							colonyText = "RTS_Settlement".Translate();
+						}
+						else
+						{
+							colonyText = "RTS_Outpost".Translate();
+						}
+						string terrainLabel = map.Biome.terrainsByFertility.MaxBy(tt => tt.max - tt.min).terrain.label;
+
+						string text = string.Format(stories.RandomElement(), colonyText, terrainLabel);
+
+						LongEventHandler.ExecuteWhenFinished(delegate
+						{
+							DiaNode diaNode = new DiaNode(text);
+							Find.TickManager.CurTimeSpeed = TimeSpeed.Paused;
+							DiaOption diaOption = new DiaOption();
+							diaOption.resolveTree = true;
+							diaOption.clickSound = null;
+							diaNode.options.Add(diaOption);
+							Dialog_NodeTree dialog_NodeTree = new Dialog_NodeTree(diaNode, false, false, null);
+							dialog_NodeTree.soundClose = (SoundDefOf.Click);
+							dialog_NodeTree.closeAction = delegate
+							{
+								Find.TickManager.CurTimeSpeed = TimeSpeed.Normal;
+							};
+							Find.WindowStack.Add(dialog_NodeTree);
+							Find.Archive.Add(new ArchivedDialog(diaNode.text, null, null));
+						});
 					}
 				}
 
@@ -765,493 +1024,573 @@ namespace ReturnToSender
 			return allDead;
 		}
 
+		void AddThought(PawnInfo pi, ThoughtDef td)
+		{
+			if (pi.pawn?.needs?.mood?.thoughts != null)
+			{
+				pi.pawn.needs.mood.thoughts.memories.TryGainMemory(td, null);
+			}
+		}
+
+		string GetHediffOutput(Hediff h)
+		{
+			HediffComp_TendDuration tend = h?.TryGetComp<HediffComp_TendDuration>();
+			HediffComp_Immunizable imm = h?.TryGetComp<HediffComp_Immunizable>();
+			StringBuilder sb = new StringBuilder();
+			sb.AppendFormat("{0}, Sev: {1}", h.LabelCap, h.Severity);
+			sb.Append(h.LabelCap);
+			if (tend != null)
+			{
+				sb.AppendFormat(", Tend: {0}", tend.tendQuality);
+			}
+
+			if (imm != null)
+			{
+				sb.AppendFormat(", Imm: {0}", imm.Immunity);
+			}
+
+			return sb.ToString();
+		}
+
 		bool DoStep(int hour)
 		{
 			bool continueStepping = false;
 			List<string> messages = new List<string>();
-			// First we tick job status to free up pawns.
-			foreach (PawnInfo pi in currentPawns)
+			try
 			{
-				if (pi.jobStatus == PawnJobStatus.MovingCorpse && !pi.IsUseless)
+				// First we tick job status to free up pawns.
+				foreach (PawnInfo pi in currentPawns)
 				{
-					// Should not happen...
-					if (pi.carryInfo == null)
+					if (pi.jobStatus == PawnJobStatus.MovingCorpse && !pi.IsUseless)
+					{
+						// Should not happen...
+						if (pi.carryInfo == null)
+						{
+							pi.jobStatus = PawnJobStatus.Idle;
+						}
+						else
+						{
+							pi.carryInfo.cleanupHoursLeft--;
+							if (pi.carryInfo.cleanupHoursLeft <= 0)
+							{
+								messages.Add(pi.pawn + " just finished cleaning up " + pi.carryInfo.corpse);
+								if (pi.carryInfo.colonistPawnInfo != null)
+								{
+									pi.carryInfo.colonistPawnInfo.corpseCleaned = true;
+								}
+								else
+								{
+									pi.carryInfo.corpse.Destroy(DestroyMode.KillFinalize);
+								}
+								currentCorpses.Remove(pi.carryInfo);
+								pi.jobStatus = PawnJobStatus.Idle;
+								pi.carryInfo = null;
+							}
+						}
+					}
+					else if (pi.carryInfo != null)
+					{
+						messages.Add(pi.pawn + " just dropped " + pi.carryInfo.corpse);
+						pi.carryInfo.carriedByInfo = null;
+						pi.carryInfo = null;
+					}
+
+					if (pi.jobStatus == PawnJobStatus.Doctoring || pi.jobStatus == PawnJobStatus.Resting)
 					{
 						pi.jobStatus = PawnJobStatus.Idle;
 					}
-					else
+				}
+
+				// Next we treat illnesses as best we can.
+				foreach (PawnInfo pi in currentPawns.Where(pi => !pi.IsDeadOrGone && Rand.Chance(ChancePawnSeeksMedicalRestPerHour) && HealthAIUtility.ShouldSeekMedicalRestUrgent(pi.pawn)))
+				{
+					PawnInfo doctor;
+					if (TryGetBestDoctor(currentPawns, pi, out doctor))
 					{
-						pi.carryInfo.cleanupHoursLeft--;
-						if (pi.carryInfo.cleanupHoursLeft <= 0)
+						doctor.jobStatus = PawnJobStatus.Doctoring;
+						doctor.patient = pi;
+						pi.jobStatus = PawnJobStatus.Resting;
+
+						int tendDuration = (int)(1f / doctor.pawn.GetStatValue(StatDefOf.MedicalTendSpeed, true) * 600f);
+						if (tendDuration > GenDate.TicksPerHour)
 						{
-							messages.Add(pi.pawn + " just finished cleaning up " + pi.carryInfo.corpse);
-							if (pi.carryInfo.colonistPawnInfo != null)
+							tendDuration = GenDate.TicksPerHour;
+						}
+
+						int maxTendsByTime = GenDate.TicksPerHour / tendDuration;
+						int tendCount = 0;
+						while (tendCount < maxTendsByTime && pi.pawn.health.HasHediffsNeedingTend(false))
+						{
+							Medicine medicine = GetMedicineToUse(map.ParentFaction.def.techLevel);
+							float quality = TendUtility.CalculateBaseTendQuality(doctor.pawn, pi.pawn, (medicine == null) ? null : medicine.def);
+							List<Hediff> tmpHediffsToTend = new List<Hediff>();
+							TendUtility.GetOptimalHediffsToTendWithSingleTreatment(pi.pawn, medicine != null, tmpHediffsToTend, null);
+							float xp = 500f * ((medicine != null) ? medicine.def.MedicineTendXpGainFactor : 0.5f);
+							doctor.pawn.skills.Learn(SkillDefOf.Medicine, xp, true);
+							TendUtility.DoTend(doctor.pawn, pi.pawn, medicine);
+							messages.Add(doctor.pawn + " tended to " + pi.pawn + " with " + medicine + " at base quality of " + quality + " on " + String.Join(", ", tmpHediffsToTend.Select(h => GetHediffOutput(h)).ToArray()));
+
+							tendCount++;
+						}
+					}
+				}
+
+				// Now we process moods (only when awake)
+				if (hour % 24 <= 17)
+				{
+					int totalTicks = intervalCarry150 + GenDate.TicksPerHour;
+					int numIntervals = totalTicks / 150;
+					intervalCarry150 = totalTicks - numIntervals * 150;
+					foreach (PawnInfo pi in currentPawns.Where(pi => !pi.IsDeadOrGone && !pi.pawn.Downed && pi.pawn.health.capacities.CanBeAwake))
+					{
+						Find.TickManager.DebugSetTicksGame(-pi.pawn.HashOffset());
+						for (int i = 0; i < numIntervals; ++i)
+						{
+							pi.pawn.needs.mood.NeedInterval();
+							pi.pawn.needs.mood.thoughts.ThoughtInterval();
+							pi.pawn.mindState.mentalStateHandler.MentalStateHandlerTick();
+							pi.pawn.mindState.mentalBreaker.MentalBreakerTick();
+						}
+
+						if (pi.pawn.mindState.mentalStateHandler.CurStateDef != null && pi.jobStatus < PawnJobStatus.MentalBreakingViolent)
+						{
+							MentalStateDef breakDef = pi.pawn.mindState.mentalStateHandler.CurStateDef;
+							messages.Add(pi.pawn + " broke with " + breakDef.defName);
+							if (breakDef.defName == "GiveUpExit" || breakDef.defName == "RunWild")
 							{
-								pi.carryInfo.colonistPawnInfo.corpseCleaned = true;
+								pi.jobStatus = PawnJobStatus.RanAway;
+
+							}
+							else if (breakDef.category == MentalStateCategory.Aggro)
+							{
+								pi.jobStatus = PawnJobStatus.MentalBreakingViolent;
 							}
 							else
 							{
-								pi.carryInfo.corpse.Destroy(DestroyMode.KillFinalize);
+								pi.jobStatus = PawnJobStatus.MentalBreakingUseless;
 							}
-							currentCorpses.Remove(pi.carryInfo);
+						}
+						else if (pi.jobStatus == PawnJobStatus.MentalBreakingViolent || pi.jobStatus == PawnJobStatus.MentalBreakingUseless)
+						{
 							pi.jobStatus = PawnJobStatus.Idle;
-							pi.carryInfo = null;
+							messages.Add(pi.pawn + " recovered!");
 						}
+						Find.TickManager.DebugSetTicksGame(stepTicksGame);
 					}
 				}
-				else if (pi.carryInfo != null)
+
+				// Acquire targets
+				List<PawnInfo> availableTargets = new List<PawnInfo>();
+				foreach (PawnInfo pi in currentPawns)
 				{
-					messages.Add(pi.pawn + " just dropped " + pi.carryInfo.corpse);
-					pi.carryInfo.carriedByInfo = null;
-					pi.carryInfo = null;
-				}
-
-				if (pi.jobStatus == PawnJobStatus.Doctoring || pi.jobStatus == PawnJobStatus.Resting)
-				{
-					pi.jobStatus = PawnJobStatus.Idle;
-				}
-			}
-
-			// Next we treat illnesses as best we can.
-			foreach (PawnInfo pi in currentPawns.Where(pi => !pi.IsDeadOrGone && HealthAIUtility.ShouldSeekMedicalRestUrgent(pi.pawn)))
-			{
-				PawnInfo doctor;
-				if (TryGetBestDoctor(currentPawns, pi, out doctor))
-				{
-					doctor.jobStatus = PawnJobStatus.Doctoring;
-					doctor.patient = pi;
-					pi.jobStatus = PawnJobStatus.Resting;
-
-					int tendDuration = (int)(1f / doctor.pawn.GetStatValue(StatDefOf.MedicalTendSpeed, true) * 600f);
-					if ( tendDuration > GenDate.TicksPerHour )
+					if (pi.jobStatus == PawnJobStatus.MentalBreakingViolent)
 					{
-						tendDuration = GenDate.TicksPerHour;
-					}
-
-					int maxTendsByTime = GenDate.TicksPerHour / tendDuration;
-					int tendCount = 0;
-					while ( tendCount < maxTendsByTime && pi.pawn.health.HasHediffsNeedingTend(false) )
-					{
-						Medicine medicine = GetMedicineToUse(map.ParentFaction.def.techLevel);
-						float quality = TendUtility.CalculateBaseTendQuality(doctor.pawn, pi.pawn, (medicine == null) ? null : medicine.def);
-						List<Hediff> tmpHediffsToTend = new List<Hediff>();
-						TendUtility.GetOptimalHediffsToTendWithSingleTreatment(pi.pawn, medicine != null, tmpHediffsToTend, null);
-						messages.Add(doctor.pawn + " tended to " + pi.pawn + " with " + medicine + " at base quality of " + quality + " on " + String.Join(", ", tmpHediffsToTend.Select(h=>h.ToString()).ToArray()));
-						float xp = 500f * ((medicine != null) ? medicine.def.MedicineTendXpGainFactor : 0.5f);
-						doctor.pawn.skills.Learn(SkillDefOf.Medicine, xp, true);
-						TendUtility.DoTend(doctor.pawn, pi.pawn, medicine);
-						tendCount++;
-					}
-				}
-			}
-			
-			// Now we process moods (only when awake)
-			if (hour % 24 <= 17)
-			{
-				int totalTicks = intervalCarry150 + GenDate.TicksPerHour;
-				int numIntervals = totalTicks / 150;
-				intervalCarry150 = totalTicks - numIntervals * 150;
-				foreach (PawnInfo pi in currentPawns.Where(pi => !pi.IsDeadOrGone && !pi.pawn.Downed && pi.pawn.health.capacities.CanBeAwake))
-				{
-					Find.TickManager.DebugSetTicksGame(-pi.pawn.HashOffset());
-					for (int i = 0; i < numIntervals; ++i)
-					{
-						pi.pawn.needs.mood.NeedInterval();
-						pi.pawn.needs.mood.thoughts.ThoughtInterval();
-						pi.pawn.mindState.mentalStateHandler.MentalStateHandlerTick();
-						pi.pawn.mindState.mentalBreaker.MentalBreakerTick();
-					}
-
-					if (pi.pawn.mindState.mentalStateHandler.CurStateDef != null && pi.jobStatus < PawnJobStatus.MentalBreakingViolent)
-					{
-						MentalStateDef breakDef = pi.pawn.mindState.mentalStateHandler.CurStateDef;
-						messages.Add(pi.pawn + " broke with " + breakDef.defName);
-						if (breakDef.defName == "GiveUpExit" || breakDef.defName == "RunWild")
+						if (pi.combatTarget == null || !pi.combatTarget.CanBeAttacked)
 						{
-							pi.jobStatus = PawnJobStatus.RanAway;
-
-						}
-						else if (breakDef.category == MentalStateCategory.Aggro)
-						{
-							pi.jobStatus = PawnJobStatus.MentalBreakingViolent;
-						}
-						else
-						{
-							pi.jobStatus = PawnJobStatus.MentalBreakingUseless;
-						}
-					}
-					else if (pi.jobStatus == PawnJobStatus.MentalBreakingViolent || pi.jobStatus == PawnJobStatus.MentalBreakingUseless)
-					{
-						pi.jobStatus = PawnJobStatus.Idle;
-						messages.Add(pi.pawn + " recovered!");
-					}
-					Find.TickManager.DebugSetTicksGame(stepTicksGame);
-				}
-			}
-
-			// Acquire targets
-			List<PawnInfo> availableTargets = new List<PawnInfo>();
-			foreach (PawnInfo pi in currentPawns)
-			{
-				if (pi.jobStatus == PawnJobStatus.MentalBreakingViolent)
-				{
-					if (pi.combatTarget == null || !pi.combatTarget.CanBeAttacked)
-					{
-						currentPawns.Where(pi2 => pi != pi2 && pi.CanBeAttacked).TryRandomElement(out pi.combatTarget);
-						// Fight back!
-						if (pi.combatTarget != null)
-						{
-							messages.Add(pi.pawn + " is rage attacking " + pi.combatTarget.pawn);
-							pi.UpdateAttackDelay(true);
-							if (!pi.combatTarget.IsUseless)
+							currentPawns.Where(pi2 => pi != pi2 && pi2.CanBeAttacked).TryRandomElement(out pi.combatTarget);
+							// Fight back!
+							if (pi.combatTarget != null)
 							{
-								messages.Add(pi.combatTarget.pawn + " is counter attacking " + pi.pawn);
-								pi.combatTarget.FightPawn(pi);
-								pi.combatTarget.UpdateAttackDelay(true);
+								messages.Add(pi.pawn + " is rage attacking " + pi.combatTarget.pawn);
+								pi.UpdateAttackDelay(true);
+								if (!pi.combatTarget.IsUseless)
+								{
+									messages.Add(pi.combatTarget.pawn + " is counter attacking " + pi.pawn);
+									pi.combatTarget.FightPawn(pi);
+									pi.combatTarget.UpdateAttackDelay(true);
+								}
+							}
+							else
+							{
+								messages.Add(pi.pawn + " is rage attacking nobody.");
 							}
 						}
-						else
+						int missingAttackers = 3 - currentPawns.Count(pi2 => pi2.jobStatus == PawnJobStatus.Fighting && pi2.combatTarget == pi);
+						for (int i = 0; i < missingAttackers; ++i)
 						{
-							messages.Add(pi.pawn + " is rage attacking nobody.");
+							availableTargets.Add(pi);
 						}
 					}
-					int missingAttackers = 3 - currentPawns.Count(pi2 => pi2.jobStatus == PawnJobStatus.Fighting && pi2.combatTarget == pi);
-					for (int i = 0; i < missingAttackers; ++i)
+					else if (pi.jobStatus == PawnJobStatus.Fighting && pi.combatTarget != null && pi.combatTarget.jobStatus != PawnJobStatus.MentalBreakingViolent)
 					{
-						availableTargets.Add(pi);
+						messages.Add(pi.pawn + " stopped attacking as the break is over for " + pi.combatTarget.pawn);
+						pi.combatTarget.FightPawn(null);
+						pi.FightPawn(null);
 					}
 				}
-				else if (pi.jobStatus == PawnJobStatus.Fighting && pi.combatTarget != null && pi.combatTarget.jobStatus != PawnJobStatus.MentalBreakingViolent)
-				{
-					messages.Add(pi.pawn + " stopped attacking as the break is over for " + pi.combatTarget);
-					pi.combatTarget.FightPawn(null);
-				}
-			}
 
-			availableTargets.Shuffle();
-			int foundTargets = 0;
-			foreach (PawnInfo pi in availableTargets)
-			{
-				PawnInfo attacker;
-				if (!currentPawns.Where(pi2 => pi2.CanTakeJob).TryRandomElement(out attacker))
+				availableTargets.Shuffle();
+				int foundTargets = 0;
+				foreach (PawnInfo pi in availableTargets)
 				{
-					break;
-				}
-
-				messages.Add(attacker.pawn + " is trying to take down " + pi.pawn);
-				attacker.FightPawn(pi);
-				attacker.UpdateAttackDelay(true);
-				foundTargets++;
-			}
-			availableTargets.RemoveRange(0, foundTargets);
-
-			int combatTicksLeft = GenDate.TicksPerHour;
-			int zeroTicks = 0;
-			while (combatTicksLeft > 0 && currentPawns.Any(pi => pi.combatTarget != null))
-			{
-				IEnumerable<PawnInfo> combatants = currentPawns.Where(pi => pi.combatTarget != null);
-				int minTicks = combatants.Min(pi => pi.ticksToAttack);
-				if (minTicks == 0)
-				{
-					if (zeroTicks >= 3)
+					PawnInfo attacker;
+					if (!currentPawns.Where(pi2 => pi2.CanTakeJob).TryRandomElement(out attacker))
 					{
-						Log.Message(hour + ": Breaking combat loop...");
 						break;
 					}
-					zeroTicks++;
-				}
-				else
-				{
-					zeroTicks = 0;
-				}
 
-				foreach (PawnInfo combatant in combatants)
+					messages.Add(attacker.pawn + " is trying to take down " + pi.pawn);
+					attacker.FightPawn(pi);
+					attacker.UpdateAttackDelay(true);
+					foundTargets++;
+				}
+				availableTargets.RemoveRange(0, foundTargets);
+
+				int combatTicksLeft = GenDate.TicksPerHour;
+				int zeroTicks = 0;
+				while (combatTicksLeft > 0 && currentPawns.Any(pi => pi.combatTarget != null))
 				{
-					
-					if (combatant.pawn.Dead || combatant.pawn.Downed)
+					IEnumerable<PawnInfo> combatants = currentPawns.Where(pi => pi.combatTarget != null);
+					int minTicks = combatants.Min(pi => pi.ticksToAttack);
+					if (minTicks == 0)
 					{
-						messages.Add(combatant.pawn + " is " + (combatant.pawn.Dead ? "dead." : "down."));
-						if (combatant.combatTarget.jobStatus == PawnJobStatus.MentalBreakingViolent)
+						if (zeroTicks >= 3)
 						{
-							availableTargets.Add(combatant.combatTarget);
+							if (Verbose)
+							{
+								Log.Message(hour + ": Breaking combat loop...");
+							}
+							break;
 						}
-
-						if (combatant.jobStatus == PawnJobStatus.MentalBreakingViolent)
-						{
-							availableTargets.RemoveAll(pi => pi == combatant);
-						}
-
-						combatant.FightPawn(null);
-						continue;
+						zeroTicks++;
+					}
+					else
+					{
+						zeroTicks = 0;
 					}
 
-					combatant.ticksToAttack -= minTicks;
-					if (combatant.ticksToAttack <= 0)
+					foreach (PawnInfo combatant in combatants)
 					{
-						if (combatant.cooldownActive)
-						{
-							combatant.cooldownActive = false;
-							combatant.UpdateAttackDelay(false);
-							if (combatant.ticksToAttack > 0)
-							{
-								continue;
-							}
-						}
 
-						if (!combatant.combatTarget.CanBeAttacked)
+						if (combatant.pawn.Dead || combatant.pawn.Downed)
 						{
+							messages.Add(combatTicksLeft + ": " + combatant.pawn + " is " + (combatant.pawn.Dead ? "dead." : "down."));
+							if (combatant.combatTarget.jobStatus == PawnJobStatus.MentalBreakingViolent)
+							{
+								availableTargets.Add(combatant.combatTarget);
+							}
+
 							if (combatant.jobStatus == PawnJobStatus.MentalBreakingViolent)
 							{
-								currentPawns.Where(target => combatant != target && combatant.CanBeAttacked).TryRandomElement(out combatant.combatTarget);
+								availableTargets.RemoveAll(pi => pi == combatant);
+							}
 
-								if (combatant.combatTarget != null)
+							combatant.FightPawn(null);
+							continue;
+						}
+
+						combatant.ticksToAttack -= minTicks;
+						if (combatant.ticksToAttack <= 0)
+						{
+							if (combatant.cooldownActive)
+							{
+								combatant.cooldownActive = false;
+								combatant.UpdateAttackDelay(false);
+								if (combatant.ticksToAttack > 0)
 								{
-									messages.Add(combatant.pawn + " is now rage attacking " + combatant.combatTarget.pawn);
-									combatant.UpdateAttackDelay(true);
-									if (!combatant.combatTarget.IsUseless)
+									continue;
+								}
+							}
+
+							if (combatant.combatTarget == null || !combatant.combatTarget.CanBeAttacked)
+							{
+								if (combatant.jobStatus == PawnJobStatus.MentalBreakingViolent)
+								{
+									currentPawns.Where(target => combatant != target && combatant.CanBeAttacked).TryRandomElement(out combatant.combatTarget);
+
+									if (combatant.combatTarget != null)
 									{
-										messages.Add(combatant.combatTarget.pawn + " is now counter attacking " + combatant.pawn);
-										combatant.combatTarget.FightPawn(combatant);
-										combatant.combatTarget.UpdateAttackDelay(true);
+										messages.Add(combatTicksLeft + ": " + combatant.pawn + " is now rage attacking " + combatant.combatTarget.pawn);
+										combatant.UpdateAttackDelay(true);
+										if (!combatant.combatTarget.IsUseless)
+										{
+											messages.Add(combatTicksLeft + ": " + combatant.combatTarget.pawn + " is now counter attacking " + combatant.pawn);
+											combatant.combatTarget.FightPawn(combatant);
+											combatant.combatTarget.UpdateAttackDelay(true);
+										}
+									}
+									else
+									{
+										messages.Add(combatTicksLeft + ": " + combatant.pawn + " is now rage attacking nobody.");
+										// If we can't fight anything lets make sure nothing can fight us...
+										availableTargets.RemoveAll(pi => pi == combatant);
+										continue;
 									}
 								}
 								else
 								{
-									messages.Add(combatant.pawn + " is now rage attacking nobody.");
-									// If we can't fight anything lets make sure nothing can fight us...
-									availableTargets.RemoveAll(pi => pi == combatant);
+									messages.Add(combatTicksLeft + ": " + combatant.pawn + " stopped combat.");
+									combatant.FightPawn(null);
 									continue;
 								}
 							}
-							else
+
+
+							messages.Add(combatTicksLeft + ": " + combatant.pawn + " is trying to hit " + combatant.combatTarget.pawn);
+							// Apply ouchies.
+
+							combatant.cooldownActive = true;
+							Verb attackVerb = combatant.pawn.TryGetAttackVerb(combatant.combatTarget.pawn);
+							if (attackVerb.IsMeleeAttack)
 							{
-								messages.Add(combatant.pawn + " stopped combat.");
-								combatant.FightPawn(null);
-								continue;
-							}
-						}
-
-
-						messages.Add(combatant.pawn + " is trying to hit " + combatant.combatTarget.pawn);
-						// Apply ouchies.
-						
-						combatant.cooldownActive = true;
-						Verb attackVerb = combatant.pawn.TryGetAttackVerb(combatant.combatTarget.pawn);
-						if (attackVerb.IsMeleeAttack)
-						{
-							DoMeleeAttack(combatant, (Verb_MeleeAttack) attackVerb);
-							combatant.UpdateAttackDelay(false);
-						}
-						else
-						{
-
-							Verb_LaunchProjectile projectileVerb = attackVerb as Verb_LaunchProjectile;
-							if (projectileVerb != null)
-							{
-								for (int i = 0; i < (int)getShotsPerBurstMethod.Invoke(projectileVerb, null); ++i)
-								{
-									DoRangedAttack(combatant, projectileVerb);
-								}
+								DoMeleeAttack(combatant, (Verb_MeleeAttack)attackVerb);
 								combatant.UpdateAttackDelay(false);
 							}
 							else
 							{
-								// ???
-								combatant.pawn.Kill(null);
+
+								Verb_LaunchProjectile projectileVerb = attackVerb as Verb_LaunchProjectile;
+								if (projectileVerb != null)
+								{
+									for (int i = 0; i < (int)getShotsPerBurstMethod.Invoke(projectileVerb, null); ++i)
+									{
+										DoRangedAttack(combatant, projectileVerb);
+									}
+									combatant.UpdateAttackDelay(false);
+								}
+								else
+								{
+									// ???
+									messages.Add(combatTicksLeft + ": " + "Killing " + combatant.pawn+ " because wtf?");
+									combatant.pawn.Kill(null);
+								}
+							}
+
+
+							if (combatant.combatTarget.pawn.Dead)
+							{
+								messages.Add(combatTicksLeft + ": " + combatant.pawn + " killed " + combatant.combatTarget.pawn);
 							}
 						}
-						
-
-						if (combatant.combatTarget.pawn.Dead)
-						{
-							messages.Add(combatant.pawn + " killed " + combatant.combatTarget.pawn);
-						}
 					}
+
+					combatTicksLeft -= minTicks;
 				}
 
-				combatTicksLeft -= minTicks;
-			}
 
-
-			// Clean up corpses (if it's not night)
-			if (hour % 24 <= 17)
-			{
-				int currentCarryCount = currentPawns.Count(pi => pi.jobStatus == PawnJobStatus.MovingCorpse);
-				int targetCarryCount = Math.Max(1, (int) Math.Round(currentPawns.Count(pi => !pi.IsUseless) * 0.25f));
-				if (targetCarryCount > currentCorpses.Count())
+				// Clean up corpses (if it's not night)
+				if (hour % 24 <= 17)
 				{
-					targetCarryCount = currentCorpses.Count();
-				}
-
-				int jobsLeft = targetCarryCount - currentCarryCount;
-				while (jobsLeft > 0)
-				{
-					PawnInfo worker;
-					bool rest = false;
-					if (!currentPawns.Where(pi => pi.CanTakeJob && !HealthAIUtility.ShouldSeekMedicalRest(pi.pawn)).TryRandomElement(out worker))
+					int currentCarryCount = currentPawns.Count(pi => pi.jobStatus == PawnJobStatus.MovingCorpse);
+					int targetCarryCount = Math.Max(1, (int)Math.Round(currentPawns.Count(pi => !pi.IsUseless) * 0.25f));
+					if (targetCarryCount > currentCorpses.Count())
 					{
-						if (!currentPawns.Where(pi => pi.CanTakeJob).TryRandomElement(out worker))
+						targetCarryCount = currentCorpses.Count();
+					}
+
+					int jobsLeft = targetCarryCount - currentCarryCount;
+					while (jobsLeft > 0)
+					{
+						PawnInfo worker;
+						bool rest = false;
+						if (!currentPawns.Where(pi => pi.CanTakeJob && !HealthAIUtility.ShouldSeekMedicalRest(pi.pawn)).TryRandomElement(out worker))
+						{
+							if (!currentPawns.Where(pi => pi.CanTakeJob).TryRandomElement(out worker))
+							{
+								break;
+							}
+							rest = true;
+						}
+						CorpseInfo corpse;
+						if (!currentCorpses.Where(ci => ci.carriedByInfo == null).TryRandomElement(out corpse))
 						{
 							break;
 						}
-						rest = true;
-					}
-					CorpseInfo corpse;
-					if (!currentCorpses.Where(ci => ci.carriedByInfo == null).TryRandomElement(out corpse))
-					{
-						break;
-					}
-					worker.jobStatus = PawnJobStatus.MovingCorpse;
-					worker.carryInfo = corpse;
-					corpse.carriedByInfo = worker;
-					if (rest)
-					{
-						messages.Add(worker.pawn + " interrupted rest to clean up " + corpse.corpse);
-					}
-					else
-					{
-						messages.Add(worker.pawn + " is cleaning up " + corpse.corpse);
-					}
-					jobsLeft--;
-				}
-			}
+						worker.jobStatus = PawnJobStatus.MovingCorpse;
+						worker.carryInfo = corpse;
+						corpse.carriedByInfo = worker;
 
-			// Apply plague
-			{
-				double generalSafeChance = 1.0;
-				foreach (CorpseInfo ci in currentCorpses)
-				{
-					generalSafeChance *= ci.GetSafeChance();
+						AddThought(worker, corpse.GetCleanupThought());
+
+						if (rest)
+						{
+							messages.Add(worker.pawn + " interrupted rest to clean up " + corpse.corpse);
+						}
+						else
+						{
+							messages.Add(worker.pawn + " is cleaning up " + corpse.corpse);
+						}
+						jobsLeft--;
+					}
 				}
 
-				foreach (PawnInfo pi in currentPawns.Where(pi => !pi.IsDeadOrGone && pi.pawn.health.hediffSet.HasHediff(HediffDefOf.Plague)))
+				// See corpses
+				if (hour % 24 <= 17)
 				{
-					generalSafeChance *= (1 - IdleSickColonistChancePlague);
+					foreach (PawnInfo pi in currentPawns.Where(pi => pi.CanTakeJob))
+					{
+						foreach (CorpseInfo ci in currentCorpses.Where(ci => ci.carriedByInfo == null && Rand.Chance(IdleChancePerBodyPerHourObserve)))
+						{
+							AddThought(pi, ci.GetObserveThought());
+						}
+					}
+				}
+
+				// Apply plague
+				{
+					double generalSafeChance = 1.0;
+					foreach (CorpseInfo ci in currentCorpses)
+					{
+						generalSafeChance *= ci.GetSafeChance();
+					}
+
+					foreach (PawnInfo pi in currentPawns.Where(pi => !pi.IsDeadOrGone && pi.pawn.health.hediffSet.HasHediff(HediffDefOf.Plague)))
+					{
+						generalSafeChance *= (1 - IdleSickColonistChancePlague);
+					}
+
+					foreach (PawnInfo pi in currentPawns)
+					{
+						if (pi.pawn.Dead || pi.jobStatus == PawnJobStatus.RanAway || pi.plagueStatus != PawnPlagueStatus.Normal)
+						{
+							continue;
+						}
+
+						double safeChance = generalSafeChance;
+
+						if (pi.patient != null)
+						{
+							if (pi.pawn.health.hediffSet.HasHediff(HediffDefOf.Plague))
+							{
+								safeChance /= (1 - IdleSickColonistChancePlague);
+								safeChance *= (1 - IdleSickColonistChancePlague * DoctoringChancePlagueMult);
+							}
+							pi.patient = null;
+						}
+
+						if (pi.jobStatus == PawnJobStatus.MovingCorpse)
+						{
+							safeChance /= pi.carryInfo.GetSafeChance();
+							safeChance *= pi.carryInfo.GetSafeChance(CleaningCorpseChancePlagueMult);
+						}
+
+						if (!Rand.Chance((float)safeChance))
+						{
+							Hediff hediff = HediffMaker.MakeHediff(HediffDefOf.Plague, pi.pawn, null);
+							pi.pawn.health.AddHediff(hediff, null, null, null);
+							pi.plagueStatus = PawnPlagueStatus.Sick;
+
+							messages.Add(pi.pawn + " got the plague! " + safeChance);
+						}
+					}
+				}
+
+				// Step health
+				{
+					int totalTicks = intervalCarry200 + GenDate.TicksPerHour;
+					int numIntervals = totalTicks / 200;
+					intervalCarry200 = totalTicks - numIntervals * 200;
+					foreach (PawnInfo pi in currentPawns.Where(pi => !pi.IsDeadOrGone))
+					{
+						if (pi.CanTakeJob && HealthAIUtility.ShouldSeekMedicalRest(pi.pawn))
+						{
+							pi.jobStatus = PawnJobStatus.Resting;
+						}
+
+						Find.TickManager.DebugSetTicksGame(-pi.pawn.HashOffset());
+
+						for (int i = 0; i < numIntervals; ++i)
+						{
+							foreach (HediffComp_Infecter hci in pi.pawn.health.hediffSet.hediffs.Select(h => h.TryGetComp<HediffComp_Infecter>()))
+							{
+								if (hci != null)
+								{
+									int ticksUntilInfect = (int)ticksUntilInfectField.GetValue(hci);
+									if (ticksUntilInfect > 0)
+									{
+										ticksUntilInfect = Math.Max(ticksUntilInfect - 199, 1);
+										ticksUntilInfectField.SetValue(hci, ticksUntilInfect);
+									}
+								}
+							}
+							pi.pawn.health.HealthTick();
+							if (!pi.IsDeadOrGone)
+							{
+								foreach (Hediff h in pi.pawn.health.hediffSet.hediffs)
+								{
+									h.ageTicks += 199;
+									HediffComp_TendDuration tender = h.TryGetComp<HediffComp_TendDuration>();
+									if (tender != null)
+									{
+										tender.tendTicksLeft = Math.Max(tender.tendTicksLeft - 199, 0);
+									}
+								}
+
+								for (int j = 0; j < 199; ++j)
+								{
+
+									immunityHandlerTickMethod.Invoke(pi.pawn.health.immunity, null);
+								}
+								if (pi.plagueStatus == PawnPlagueStatus.Sick && pi.GetPlagueImmunity() >= 1.0f)
+								{
+									messages.Add(pi.pawn + " IS IMMUNE! (" + pi.GetPlagueSeverity() + ")");
+									pi.plagueStatus = PawnPlagueStatus.Immune;
+								}
+							}
+							else
+							{
+								messages.Add(pi.pawn + " JUST DIED!");
+								break;
+							}
+						}
+
+						if (pi.plagueStatus == PawnPlagueStatus.Sick)
+						{
+							Hediff plague = pi.pawn.health.hediffSet.GetFirstHediffOfDef(HediffDefOf.Plague);
+							if (plague != null)
+							{
+								messages.Add(pi.pawn + " plague at: " + GetHediffOutput(plague));
+							}
+						}
+						Find.TickManager.DebugSetTicksGame(stepTicksGame);
+					}
 				}
 
 				foreach (PawnInfo pi in currentPawns)
 				{
-					if (pi.pawn.Dead || pi.jobStatus == PawnJobStatus.RanAway || pi.plagueStatus != PawnPlagueStatus.Normal)
+					if (pi.pawn.Dead && !pi.deathDetected)
 					{
-						continue;
-					}
-
-					double safeChance = generalSafeChance;
-
-					if (pi.patient != null)
-					{
-						if (pi.pawn.health.hediffSet.HasHediff(HediffDefOf.Plague))
+						foreach (PawnInfo pi2 in currentPawns)
 						{
-							safeChance /= (1 - IdleSickColonistChancePlague);
-							safeChance *= (1 - IdleSickColonistChancePlague * DoctoringChancePlagueMult);
+							if (!pi2.IsUseless)
+							{
+								AddThought(pi2, ThoughtDefOf.WitnessedDeathAlly);
+								AddThought(pi2, ThoughtDefOf.WitnessedDeathBloodlust);
+							}
+							if (!pi2.IsDeadOrGone)
+							{
+								AddThought(pi2, ThoughtDefOf.KnowColonistDied);
+							}
 						}
-						pi.patient = null;
-					}
-
-					if (pi.jobStatus == PawnJobStatus.MovingCorpse)
-					{
-						safeChance /= pi.carryInfo.GetSafeChance();
-						safeChance *= pi.carryInfo.GetSafeChance(CleaningCorpseChancePlagueMult);
-					}
-
-					if (!Rand.Chance((float)safeChance))
-					{
-						Hediff hediff = HediffMaker.MakeHediff(HediffDefOf.Plague, pi.pawn, null);
-						pi.pawn.health.AddHediff(hediff, null, null, null);
-						pi.plagueStatus = PawnPlagueStatus.Sick;
-
-						messages.Add(pi.pawn + " got the plague! " + safeChance );
+						pi.deathDetected = true;
+						pi.deathTick = stepTicksGame;
+						CorpseInfo newCorpse = new CorpseInfo(pi.pawn.Corpse, CorpseStatus.Normal, 7, stepTicksGame, pi.pawn.Position);
+						newCorpse.colonistPawnInfo = pi;
+						currentCorpses.Add(newCorpse);
 					}
 				}
-			}
 
-			// Step health
-			{
-				int totalTicks = intervalCarry200 + GenDate.TicksPerHour;
-				int numIntervals = totalTicks / 200;
-				intervalCarry200 = totalTicks - numIntervals * 200;
-				foreach (PawnInfo pi in currentPawns.Where(pi => !pi.IsDeadOrGone))
+				if (messages.Count() > 0 && Verbose)
 				{
-					if (pi.CanTakeJob && HealthAIUtility.ShouldSeekMedicalRest(pi.pawn))
-					{
-						pi.jobStatus = PawnJobStatus.Resting;
-					}
-
-					Find.TickManager.DebugSetTicksGame(-pi.pawn.HashOffset());
-
-					for (int i = 0; i < numIntervals; ++i)
-					{
-						foreach (HediffComp_Infecter hci in pi.pawn.health.hediffSet.hediffs.Select(h => h.TryGetComp<HediffComp_Infecter>()))
-						{
-							if (hci != null)
-							{
-								int ticksUntilInfect = (int) ticksUntilInfectField.GetValue(hci);
-								if (ticksUntilInfect > 0)
-								{
-									ticksUntilInfect = Math.Max(ticksUntilInfect - 199, 1);
-									ticksUntilInfectField.SetValue(hci, ticksUntilInfect);
-								}
-							}
-						}
-						pi.pawn.health.HealthTick();
-						if (!pi.IsDeadOrGone)
-						{
-							foreach (Hediff h in pi.pawn.health.hediffSet.hediffs)
-							{
-								h.ageTicks += 199;
-								HediffComp_TendDuration tender = h.TryGetComp<HediffComp_TendDuration>();
-								if (tender != null)
-								{
-									tender.tendTicksLeft = Math.Max(tender.tendTicksLeft - 199, 0);
-								}
-							}
-
-							for (int j = 0; j < 199; ++j)
-							{
-								
-								immunityHandlerTickMethod.Invoke(pi.pawn.health.immunity, null);
-							}
-							if (pi.plagueStatus == PawnPlagueStatus.Sick &&  pi.pawn.health.immunity.GetImmunity(HediffDefOf.Plague) >= 1.0f)
-							{
-								messages.Add(pi.pawn + " IS IMMUNE!");
-								pi.plagueStatus = PawnPlagueStatus.Immune;
-							}
-						}
-						else
-						{
-							messages.Add(pi.pawn + " JUST DIED!");
-							break;
-						}
-					}
-					Find.TickManager.DebugSetTicksGame(stepTicksGame);
+					Log.Message(hour + ":  " + String.Join("\n     ", messages.ToArray()));
 				}
-			}
 
-			foreach (PawnInfo pi in currentPawns)
+				// Determine if we need to keep stepping by hour.
+				//  * Are any corpses laying around?
+				//  * Anyone in a mental break?
+				//  * Anyone hurt/sick?
+				continueStepping = continueStepping || hour < 100;
+				continueStepping = continueStepping || currentPawns.Where(pi => pi.CanBeAttacked).Any(pi => pi.jobStatus != PawnJobStatus.Idle || HealthAIUtility.ShouldSeekMedicalRest(pi.pawn));
+				continueStepping = continueStepping || currentCorpses.Count() > 0;
+			}
+			catch (Exception e)
 			{
-				if (pi.pawn.Dead && !pi.deathDetected)
+				if (messages.Count() > 0 && Verbose)
 				{
-					pi.deathDetected = true;
-					pi.deathTick = stepTicksGame;
-					CorpseInfo newCorpse = new CorpseInfo(pi.pawn.Corpse, CorpseStatus.Normal, 7, stepTicksGame, pi.pawn.Position);
-					newCorpse.colonistPawnInfo = pi;
-					currentCorpses.Add(newCorpse);
+					Log.Message(hour + ":  " + String.Join("\n     ", messages.ToArray()));
 				}
+				throw;
 			}
-
-			if (messages.Count() > 0)
-			{
-				Log.Message(hour + ":  " + String.Join("\n     ", messages.ToArray()));
-			}
-
-			// Determine if we need to keep stepping by hour.
-			//  * Are any corpses laying around?
-			//  * Anyone in a mental break?
-			//  * Anyone hurt/sick?
-			continueStepping = continueStepping || hour < 100;
-			continueStepping = continueStepping || currentPawns.Where(pi => pi.CanBeAttacked).Any(pi => pi.jobStatus != PawnJobStatus.Idle || HealthAIUtility.ShouldSeekMedicalRest(pi.pawn));
-			continueStepping = continueStepping || currentCorpses.Count() > 0;
-
 			return continueStepping && currentPawns.Count(pi => !pi.IsDeadOrGone) > 0;
 		}
 
