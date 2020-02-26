@@ -20,21 +20,14 @@ namespace ReturnToSender
 		public static ThingDef RTS_CorpsePodIncoming;
 		public static ThingDef RTS_CorpsePodLeaving;
 		public static ThingDef RTS_Mote_Giblets;
-		
-		public static ThoughtDef RTS_SameFactionCorpse;
 
-		public static ThoughtDef RTS_SentIntactCorpse0;
-		public static ThoughtDef RTS_SentIntactCorpse1;
-
-		public static ThoughtDef RTS_SentGibletCorpse0;
-		public static ThoughtDef RTS_SentGibletCorpse1;
-		public static ThoughtDef RTS_SentGibletCorpse2;
-
-		public static ThoughtDef RTS_SentVaporizedCorpse0;
-		public static ThoughtDef RTS_SentVaporizedCorpse1;
-		public static ThoughtDef RTS_SentVaporizedCorpse2;
-
-		public static ThoughtDef RTS_AnnoyedByCorpse;
+		public static ThoughtDef RTS_InThisTogether;
+		public static ThoughtDef RTS_CorpseThoughtGeneral;
+		public static ThoughtDef RTS_CorpseThoughtSameFaction;
+		public static ThoughtDef RTS_CorpseThoughtHappyCannibal;
+		public static ThoughtDef RTS_CorpseThoughtSadCannibal;
+		public static ThoughtDef RTS_CorpseThoughtBloodlust;
+		public static ThoughtDef RTS_CorpseThoughtAnnoyed;
 
 		public static ThoughtDef RTS_CleanedOkayCorpse;
 		public static ThoughtDef RTS_CleanedGrossCorpse;

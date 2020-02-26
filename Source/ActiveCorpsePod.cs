@@ -157,6 +157,22 @@ namespace ReturnToSender
 			}
 		}
 
+		void UpdateMemory(MemoryThoughtHandler memories, ThoughtDef td, float m)
+		{
+			var mem = memories.GetFirstMemoryOfDef(td);
+
+			if (mem == null)
+			{
+				memories.TryGainMemory(td);
+				mem = memories.GetFirstMemoryOfDef(td);
+			}
+
+			if (mem != null)
+			{
+				mem.moodPowerFactor += m;
+			}
+		}
+
 		public override void Destroy(DestroyMode mode = DestroyMode.Vanish)
 		{
 			if (Contents != null)
@@ -179,6 +195,13 @@ namespace ReturnToSender
 
 		private void PodOpen2()
 		{
+			float sfMult = 0.0f;
+			float genMult = 0.0f;
+			float hcMult = 0.0f;
+			float scMult = 0.0f;
+			float bMult = 0.0f;
+			float aMult = 0.0f;
+
 			for (int i = Contents.innerContainer.Count - 1; i >= 0; i--)
 			{
 				Thing thing = Contents.innerContainer[i];
@@ -199,15 +222,53 @@ namespace ReturnToSender
 						spray = 3;
 						giblet = 7;
 					}
-					
+
+					bool detectedSameFaction = false;
+					bool hasHead = c.InnerPawn.health.hediffSet.HasHead;
+					bool hasClothes = c.InnerPawn.apparel.WornApparelCount > 0;
 					int r = Rand.RangeInclusive(0, 9);
 					if (rot != RotStage.Dessicated || r >= giblet)
 					{
-						foreach (Pawn current in Map.mapPawns.SpawnedPawnsInFaction(c.InnerPawn.Faction))
+						if (Map.ParentFaction == c.InnerPawn.Faction)
 						{
-							if (current.needs != null && current.needs.mood != null && current.needs.mood.thoughts != null)
+							
+							// TODO: Change chances based on apparrel or missing head.
+							if (r < spray)
 							{
-								current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SameFactionCorpse, null);
+								float detectChance = 0.5f;
+								if (!hasHead)
+								{
+									detectChance *= 0.75f;
+								}
+								if (!hasClothes)
+								{
+									detectChance *= 0.35f;
+								}
+								detectedSameFaction = Rand.Chance(detectChance);
+							}
+							else if (r < giblet)
+							{
+								float detectChance = 0.8f;
+								if (!hasHead)
+								{
+									detectChance *= 0.75f;
+								}
+								if (!hasClothes)
+								{
+									detectChance *= 0.75f;
+								}
+								detectedSameFaction = Rand.Chance(detectChance);
+							}
+							else
+							{
+								if (!hasHead && !hasClothes)
+								{
+									detectedSameFaction = Rand.Chance(0.8f);
+								}
+								else
+								{
+									detectedSameFaction = true;
+								}
 							}
 						}
 					}
@@ -216,14 +277,24 @@ namespace ReturnToSender
 					{
 						if (rot != RotStage.Dessicated)
 						{
-							foreach (Pawn current in Map.mapPawns.SpawnedPawnsInFaction(Map.ParentFaction))
+							if (detectedSameFaction)
 							{
-								if (current.needs != null && current.needs.mood != null && current.needs.mood.thoughts != null)
-								{
-									current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentVaporizedCorpse0, null);
-									current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentVaporizedCorpse1, null);
-									current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentVaporizedCorpse2, null);
-								}
+								sfMult += 1.25f;
+							}
+
+							bMult += 2.0f;
+
+							if (rot == RotStage.Fresh)
+							{
+								genMult += 1.0f;
+								scMult += 1.25f;
+								aMult += 0.25f;
+							}
+							else
+							{
+								genMult += 1.5f;
+								scMult += 1.5f;
+								aMult += 0.5f;
 							}
 							FilthMaker.MakeFilth(c.Position, Map, c.InnerPawn.RaceProps.BloodDef, c.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(5, 8));
 						}
@@ -233,15 +304,26 @@ namespace ReturnToSender
 					{
 						if (rot != RotStage.Dessicated)
 						{
-							foreach (Pawn current in Map.mapPawns.SpawnedPawnsInFaction(Map.ParentFaction))
+							if (detectedSameFaction)
 							{
-								if (current.needs != null && current.needs.mood != null && current.needs.mood.thoughts != null)
-								{
-									current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentGibletCorpse0, null);
-									current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentGibletCorpse1, null);
-									current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentGibletCorpse2, null);
-								}
+								sfMult += 1.5f;
 							}
+
+							bMult += 1.0f;
+
+							if (rot == RotStage.Fresh)
+							{
+								genMult += 1.25f;
+								hcMult += 1.5f;
+								aMult += 0.35f;
+							}
+							else
+							{
+								genMult += 1.75f;
+								scMult += 1.5f;
+								aMult += 0.65f;
+							}
+
 							FilthMaker.MakeFilth(c.Position, Map, c.InnerPawn.RaceProps.BloodDef, c.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(2, 3));
 							float eff = Rand.Range(0.5f, 0.7071067811865f);
 							Thing thing3 = null;
@@ -254,20 +336,51 @@ namespace ReturnToSender
 					}
 					else
 					{
-						foreach (Pawn current in Map.mapPawns.SpawnedPawnsInFaction(Map.ParentFaction))
+						if (detectedSameFaction)
 						{
-							if (current.needs != null && current.needs.mood != null && current.needs.mood.thoughts != null)
-							{
-								current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentIntactCorpse0, null);
-								current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentIntactCorpse1, null);
-							}
+							sfMult += 1.25f;
 						}
+
+						if (rot == RotStage.Fresh)
+						{
+							genMult += 0.75f;
+							hcMult += 1.25f;
+							aMult += 0.25f;
+						}
+						else
+						{
+							genMult += 1.25f;
+							scMult += 1.25f;
+							aMult += 0.5f;
+						}
+
 						FilthMaker.MakeFilth(c.Position, Map, c.InnerPawn.RaceProps.BloodDef, c.InnerPawn.LabelIndefinite(), 1);
 					}
 				}
 			}
+
+
+			foreach (Pawn p in Map.mapPawns.SpawnedPawnsInFaction(Map.ParentFaction))
+			{
+				var memories = p.needs.mood.thoughts.memories;
+				UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtGeneral, genMult * 0.66667f);
+				UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtSameFaction, sfMult * 0.66667f);
+				UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtHappyCannibal, hcMult * 0.66667f);
+				UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtSadCannibal, scMult * 0.66667f);
+				UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtBloodlust, bMult * 0.66667f);
+
+				if (p.story.traits.HasTrait(TraitDefOf.Psychopath) || p.story.traits.DegreeOfTrait(TraitDefOf.Industriousness) < 0)
+				{
+					int mult = -p.story.traits.DegreeOfTrait(TraitDefOf.Industriousness);
+					if (p.story.traits.HasTrait(TraitDefOf.Psychopath))
+					{
+						mult++;
+					}
+					UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtAnnoyed, aMult * mult);
+				}
+			}
 			Contents.innerContainer.ClearAndDestroyContents(DestroyMode.Vanish);
-		  
+		 
 			RTS_DefOf.RTS_CorpsePod_Open.PlayOneShot(new TargetInfo(base.Position, base.Map, false));
 			this.Destroy(DestroyMode.Vanish);
 		}

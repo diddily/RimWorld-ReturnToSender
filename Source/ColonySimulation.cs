@@ -74,7 +74,7 @@ namespace ReturnToSender
 			intervalCarry150 = 0;
 			intervalCarry200 = 0;
 			savedTicksGame = Find.TickManager.TicksGame;
-
+			// TODO: Prisoners?
 			foreach (Pawn current in map.mapPawns.SpawnedPawnsInFaction(map.ParentFaction))
 			{
 				PawnInfo pawnInfo = new PawnInfo();
@@ -102,7 +102,9 @@ namespace ReturnToSender
 			public int tick;
 			public PawnInfo colonistPawnInfo;
 			public IntVec3 cell;
-			public CorpseInfo(Corpse c, CorpseStatus s, int h, int t, IntVec3 ce)
+			public bool sameFaction;
+			public bool fromPod;
+			public CorpseInfo(Corpse c, CorpseStatus s, int h, int t, IntVec3 ce, bool sf, bool fp)
 			{
 				corpse = c;
 				status = s;
@@ -111,6 +113,8 @@ namespace ReturnToSender
 				tick = t;
 				colonistPawnInfo = null;
 				cell = ce;
+				sameFaction = sf;
+				fromPod = fp;
 			}
 
 			public double GetSafeChance(double mult = 1)
@@ -595,23 +599,53 @@ namespace ReturnToSender
 						spray = 3;
 						giblet = 7;
 					}
-
+					bool detectedSameFaction = false;
+					bool hasHead = c.InnerPawn.health.hediffSet.HasHead;
+					bool hasClothes = c.InnerPawn.apparel.WornApparelCount > 0;
 					int r = Rand.RangeInclusive(0, 9);
 					if (rot != RotStage.Dessicated || r >= giblet)
 					{
 						if (map.ParentFaction == c.InnerPawn.Faction)
 						{
 							cleanupHours += 2;
-						}
-
-						foreach (Pawn current in map.mapPawns.SpawnedPawnsInFaction(c.InnerPawn.Faction))
-						{
-							if (current.needs != null && current.needs.mood != null && current.needs.mood.thoughts != null)
+							if (r < spray)
 							{
-								current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SameFactionCorpse, null);
+								float detectChance = 0.5f;
+								if (!hasHead)
+								{
+									detectChance *= 0.75f;
+								}
+								if (!hasClothes)
+								{
+									detectChance *= 0.35f;
+								}
+								detectedSameFaction = Rand.Chance(detectChance);
+							}
+							else if (r < giblet)
+							{
+								float detectChance = 0.8f;
+								if (!hasHead)
+								{
+									detectChance *= 0.75f;
+								}
+								if (!hasClothes)
+								{
+									detectChance *= 0.75f;
+								}
+								detectedSameFaction = Rand.Chance(detectChance);
+							}
+							else
+							{
+								if (!hasHead && !hasClothes)
+								{
+									detectedSameFaction = Rand.Chance(0.8f);
+								}
+								else
+								{
+									detectedSameFaction = true;
+								}
 							}
 						}
-						cleanupCorpses++;
 					}
 
 					if (r < spray) // Blood spray
@@ -619,16 +653,7 @@ namespace ReturnToSender
 						if (rot != RotStage.Dessicated)
 						{
 							cleanupHours += 1;
-							foreach (Pawn current in map.mapPawns.SpawnedPawnsInFaction(map.ParentFaction))
-							{
-								if (current.needs != null && current.needs.mood != null && current.needs.mood.thoughts != null)
-								{
-									current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentVaporizedCorpse0, null);
-									current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentVaporizedCorpse1, null);
-									current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentVaporizedCorpse2, null);
-								}
-							}
-							currentCorpses.Add(new CorpseInfo(c, CorpseStatus.Vaporized, cleanupHours, info.tickLanded, cell));
+							currentCorpses.Add(new CorpseInfo(c, CorpseStatus.Vaporized, cleanupHours, info.tickLanded, cell, detectedSameFaction, true));
 							cleanupCorpses++;
 						}
 						else
@@ -641,16 +666,7 @@ namespace ReturnToSender
 						if (rot != RotStage.Dessicated)
 						{
 							cleanupHours += 2;
-							foreach (Pawn current in map.mapPawns.SpawnedPawnsInFaction(map.ParentFaction))
-							{
-								if (current.needs != null && current.needs.mood != null && current.needs.mood.thoughts != null)
-								{
-									current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentGibletCorpse0, null);
-									current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentGibletCorpse1, null);
-									current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentGibletCorpse2, null);
-								}
-							}
-							currentCorpses.Add(new CorpseInfo(c, CorpseStatus.Giblets, cleanupHours, info.tickLanded, cell));
+							currentCorpses.Add(new CorpseInfo(c, CorpseStatus.Giblets, cleanupHours, info.tickLanded, cell, detectedSameFaction, true));
 							cleanupCorpses++;
 						}
 						else
@@ -661,33 +677,8 @@ namespace ReturnToSender
 					else
 					{
 						cleanupHours += 2;
-						foreach (Pawn current in map.mapPawns.SpawnedPawnsInFaction(map.ParentFaction))
-						{
-							if (current.needs != null && current.needs.mood != null && current.needs.mood.thoughts != null)
-							{
-								current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentIntactCorpse0, null);
-								current.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_SentIntactCorpse1, null);
-							}
-						}
-						currentCorpses.Add(new CorpseInfo(c, CorpseStatus.Normal, cleanupHours, info.tickLanded, cell));
+						currentCorpses.Add(new CorpseInfo(c, CorpseStatus.Normal, cleanupHours, info.tickLanded, cell, detectedSameFaction, true));
 						cleanupCorpses++;
-					}
-				}
-			}
-
-			foreach (Pawn p in map.mapPawns.SpawnedPawnsInFaction(map.ParentFaction).Where(p => p.story.traits.HasTrait(TraitDefOf.Psychopath) || p.story.traits.DegreeOfTrait(TraitDefOf.Industriousness) < 0))
-			{
-				if (p.needs != null && p.needs.mood != null && p.needs.mood.thoughts != null)
-				{
-					int mult = -p.story.traits.DegreeOfTrait(TraitDefOf.Industriousness);
-					if (p.story.traits.HasTrait(TraitDefOf.Psychopath))
-					{
-						mult++;
-					}
-					mult = Math.Min(mult, 150);
-					for (int i = 0; i < cleanupCorpses; i++)
-					{
-						p.needs.mood.thoughts.memories.TryGainMemory(RTS_DefOf.RTS_AnnoyedByCorpse, null);
 					}
 				}
 			}
@@ -1052,6 +1043,23 @@ namespace ReturnToSender
 			return sb.ToString();
 		}
 
+		void UpdateMemory(MemoryThoughtHandler memories, ThoughtDef td, float m)
+		{
+			var mem = memories.GetFirstMemoryOfDef(td);
+
+			if (mem == null)
+			{
+				memories.TryGainMemory(td);
+				mem = memories.GetFirstMemoryOfDef(td);
+			}
+
+			if (mem != null)
+			{
+				mem.Renew();
+				mem.moodPowerFactor = m;
+			}
+		}
+
 		bool DoStep(int hour)
 		{
 			bool continueStepping = false;
@@ -1102,7 +1110,7 @@ namespace ReturnToSender
 				}
 
 				// Next we treat illnesses as best we can.
-				foreach (PawnInfo pi in currentPawns.Where(pi => !pi.IsDeadOrGone && Rand.Chance(ChancePawnSeeksMedicalRestPerHour) && HealthAIUtility.ShouldSeekMedicalRestUrgent(pi.pawn)))
+				foreach (PawnInfo pi in currentPawns.Where(pi => !pi.IsDeadOrGone && Rand.Chance(ChancePawnSeeksMedicalRestPerHour) && HealthAIUtility.ShouldSeekMedicalRestUrgent(pi.pawn) && pi.jobStatus != PawnJobStatus.MentalBreakingViolent))
 				{
 					PawnInfo doctor;
 					if (TryGetBestDoctor(currentPawns, pi, out doctor))
@@ -1138,6 +1146,107 @@ namespace ReturnToSender
 				// Now we process moods (only when awake)
 				if (hour % 24 <= 17)
 				{
+					float sfMult = 0.0f;
+					float genMult = 0.0f;
+					float hcMult = 0.0f;
+					float scMult = 0.0f;
+					float bMult = 0.0f;
+					float aMult = 0.0f;
+					int ittMult = currentPawns.Count(pi => !pi.IsUseless && pi.plagueStatus != PawnPlagueStatus.Sick);
+
+					foreach (CorpseInfo ci in currentCorpses.Where(ci => ci.fromPod))
+					{
+						RotStage rot = ci.corpse.GetRotStage();
+						bool sf = ci.sameFaction;
+						if (ci.status == CorpseStatus.Normal)
+						{
+							if (sf)
+							{
+								sfMult += 1.25f;
+							}
+
+							if (rot == RotStage.Fresh)
+							{
+								genMult += 0.75f;
+								hcMult += 1.25f;
+								aMult += 1.25f;
+							}
+							else
+							{
+								genMult += 1.25f;
+								scMult += 1.25f;
+								aMult += 1.5f;
+							}
+						}
+						else if (ci.status == CorpseStatus.Giblets)
+						{
+							if (sf)
+							{
+								sfMult += 1.5f;
+							}
+
+							bMult += 1.0f;
+
+							if (rot == RotStage.Fresh)
+							{
+								genMult += 1.25f;
+								hcMult += 1.5f;
+								aMult += 1.35f;
+							}
+							else
+							{
+								genMult += 1.75f;
+								scMult += 1.5f;
+								aMult += 1.65f;
+							}
+						}
+						else
+						{
+							if (sf)
+							{
+								sfMult += 1.25f;
+							}
+
+							bMult += 2.0f;
+
+							if (rot == RotStage.Fresh)
+							{
+								genMult += 1.0f;
+								scMult += 1.25f;
+								aMult += 1.25f;
+							}
+							else
+							{
+								genMult += 1.5f;
+								scMult += 1.5f;
+								aMult += 1.5f;
+							}
+						}
+					}
+
+					aMult = aMult / Math.Max(1, ittMult);
+
+					foreach (PawnInfo pi in currentPawns.Where(pi => !pi.IsDeadOrGone && pi.pawn?.needs?.mood?.thoughts?.memories != null))
+					{
+						var memories = pi.pawn.needs.mood.thoughts.memories;
+						UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtGeneral, genMult);
+						UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtSameFaction, sfMult);
+						UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtHappyCannibal, hcMult);
+						UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtSadCannibal, scMult);
+						UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtBloodlust, bMult);
+						UpdateMemory(memories, RTS_DefOf.RTS_InThisTogether, 1.5f * ittMult);
+
+						if (pi.pawn.story.traits.HasTrait(TraitDefOf.Psychopath) || pi.pawn.story.traits.DegreeOfTrait(TraitDefOf.Industriousness) < 0)
+						{
+							int mult = -pi.pawn.story.traits.DegreeOfTrait(TraitDefOf.Industriousness);
+							if (pi.pawn.story.traits.HasTrait(TraitDefOf.Psychopath))
+							{
+								mult++;
+							}
+							UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtAnnoyed, Math.Max(100.0f, aMult * mult));
+						}
+					}
+
 					int totalTicks = intervalCarry150 + GenDate.TicksPerHour;
 					int numIntervals = totalTicks / 150;
 					intervalCarry150 = totalTicks - numIntervals * 150;
@@ -1325,8 +1434,9 @@ namespace ReturnToSender
 								}
 							}
 
-
-							messages.Add(combatTicksLeft + ": " + combatant.pawn + " is trying to hit " + combatant.combatTarget.pawn);
+							float beforeSeverity = combatant.combatTarget.pawn.health.hediffSet.hediffs.OfType<Hediff_Injury>().Sum(hi => hi.Severity);
+							string verb;
+							
 							// Apply ouchies.
 
 							combatant.cooldownActive = true;
@@ -1335,10 +1445,12 @@ namespace ReturnToSender
 							{
 								DoMeleeAttack(combatant, (Verb_MeleeAttack)attackVerb);
 								combatant.UpdateAttackDelay(false);
+								verb = "swung";
 							}
 							else
 							{
 
+								verb = "shot";
 								Verb_LaunchProjectile projectileVerb = attackVerb as Verb_LaunchProjectile;
 								if (projectileVerb != null)
 								{
@@ -1355,7 +1467,16 @@ namespace ReturnToSender
 									combatant.pawn.Kill(null);
 								}
 							}
-
+							float afterSeverity = combatant.combatTarget.pawn.health.hediffSet.hediffs.OfType<Hediff_Injury>().Sum(hi => hi.Severity);
+							float deltaSeverity = afterSeverity - beforeSeverity;
+							if (deltaSeverity == 0)
+							{
+								messages.Add(combatTicksLeft + ": " + combatant.pawn + " " + verb + " at " + combatant.combatTarget.pawn + " and missed.");
+							}
+							else
+							{
+								messages.Add(combatTicksLeft + ": " + combatant.pawn + " " + verb + " at " + combatant.combatTarget.pawn + " for " + deltaSeverity + " severity. (" + beforeSeverity + " -> " + afterSeverity + ")");
+							}
 
 							if (combatant.combatTarget.pawn.Dead)
 							{
@@ -1564,7 +1685,7 @@ namespace ReturnToSender
 						}
 						pi.deathDetected = true;
 						pi.deathTick = stepTicksGame;
-						CorpseInfo newCorpse = new CorpseInfo(pi.pawn.Corpse, CorpseStatus.Normal, 7, stepTicksGame, pi.pawn.Position);
+						CorpseInfo newCorpse = new CorpseInfo(pi.pawn.Corpse, CorpseStatus.Normal, 7, stepTicksGame, pi.pawn.Position, true, false);
 						newCorpse.colonistPawnInfo = pi;
 						currentCorpses.Add(newCorpse);
 					}
