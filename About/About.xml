@@ -1,11 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ModMetaData>
-	<name>ReturnToSender - Dev Build</name>
+	<name>Return to Sender</name>
 	<author>diddily</author>
   <supportedVersions>
     <li>1.0</li>
   </supportedVersions>
-	<description>Return To Sender 
-(This is the dev version of ReturnToSender. The release version of About.xml is available for editing at About/About-Release.xml. Edits made on this file or on the temporary About/About.xml won't show up on the release version. Use VisualStudio to build a "Release" version of this mod when ready to upload your mod!)</description>
-	<url>https://steamcommunity.com/id/diddily/myworkshopfiles/?appid=294100</url>
+	<description>Have you found your base just brimming with corpses and have nothing to do with them? Your cannibals are fed, your kibble stocks are full, your colonists are nice and toasty in the nice leather apparel? Have you resorted to burning them? What a waste!!
+
+Perhaps you are just looking for a nice evening playing Rimworld and commiting war crimes and massive atrocities upon those unfortante enough to have settled within cargo pod distance of you?
+
+Return to Sender is simple in concept, it adds a new type of cargo pod you can launch, a corpse pod. You simply fill the corpse pod with the bodies you'd like to dispose of and send them to your neighbors. Not only will this anger them, it will spread pestilence and insanity to the poor souls residing there. Then after a few days you can simply go pay them a friendly visit to potentially find their numbers diminished by plague, berserk rages and/or cowardice! Send enough bodies and the whole settlement could be wiped out! Or you can arrive earlier and see the mayhem unfolding before your eyes...
+
+Features:
+	* Corpse pod which is a cheaper cargo pod that takes steel and fabric/leather and can go further on less chemfuel (it lithobrakes instead of a controlled landing). Only takes corpses.
+	* Colony simulation which runs between when corpses are sent and when you arrive at the location. The more bodies you send the more likely you are to overwhelm them as they frantically work to clean up the mess. Damage vectors include:
+		* Plague: small chance per body to infect a colonist, once one is sick it starts to spread faster. The lower the tech of the base, the worse the medicine they will use to treat it.
+		* In-fighting: the corpses in large numbers stack on a large mood debuff, enough to trigger beserk rages in which they will fight themselves (often to the death). Returning their loved ones back to them makes the debuff even stronger.
+		* Giving up: Too much negativity and some colonists will simply give up on the base and run away.
+	* The longer you wait to visit the attacked base, the more likely the damage will be larger. But if you wait too long, they may start to rebuild from the damage inflicted. And if you arrive earlier, you'll stop the simulation mid chaos and might be able to witness the madness. Or you can send them while you are there and watch the pods crash into a bloody mess!
+		
+What's not to love with weaponized corpses? Commit a biological and psychological war crime today!
+	</description>
+	<!--<url>https://steamcommunity.com/id/diddily/myworkshopfiles/?appid=294100</url>-->
 </ModMetaData>
