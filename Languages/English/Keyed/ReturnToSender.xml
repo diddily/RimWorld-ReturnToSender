@@ -2,6 +2,7 @@
 <LanguageData>
   <RTS_MessageTransporterTypesInvalid>Cannot mix corpse pods with other types of transport pods.</RTS_MessageTransporterTypesInvalid>
   <RTS_GiveBodiesViaCorpsePods>Send corpses as an insult to {0} ({1})</RTS_GiveBodiesViaCorpsePods>
+  <RTS_SendBodiesToLocation>Send corpses to site</RTS_SendBodiesToLocation>
 
   <RTS_MessageTransportPodsArrived>Your corpse pods have arrived.</RTS_MessageTransportPodsArrived>
   <RTS_MessageTransportPodsArrivedAndLost>Your corpse pods have arrived, but since there were no (living) colonists around, the contents are lost.</RTS_MessageTransportPodsArrivedAndLost>
@@ -10,8 +11,14 @@
   <RTS_GoodwillChangedReason_ReceivedGift>received corpses</RTS_GoodwillChangedReason_ReceivedGift>
   <RTS_MessageGiftGivenButNotAppreciated>{0} got your corpses but they don't seem bothered by it.</RTS_MessageGiftGivenButNotAppreciated>
 
+	<RTS_Location>location</RTS_Location>
   <RTS_Settlement>settlement</RTS_Settlement>
+	<RTS_Site>site</RTS_Site>
   <RTS_Outpost>outpost</RTS_Outpost>
+
+	<RTS_Story_Empty_0>Your colonists arrive to the bombarded location only to have to step over and around the corpses they sent. It seems no humans were here to be affected by these bodies and thus, nobody has bothered to clean them up.
+	
+Perhaps a more tactically viable target would be wise next time...</RTS_Story_Empty_0>
   
   <RTS_Story_Annihilation_Active_0>This {0} was completely devastated by the effects of corpses being launched into the surrounding area.
 

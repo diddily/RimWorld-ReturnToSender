@@ -1,4 +1,8 @@
-﻿using Harmony;
+﻿#if VERSION_1_0
+using Harmony;
+#else
+using HarmonyLib;
+#endif
 using RimWorld;
 using System;
 using System.Collections.Generic;
@@ -96,7 +100,7 @@ namespace ReturnToSender
 						int r = Rand.RangeInclusive(-3, 2);
 						if (r > 0)
 						{
-							FilthMaker.MakeFilth(Position, Map, c.InnerPawn.RaceProps.BloodDef, c.InnerPawn.LabelIndefinite(), r);
+							Utilities.MakeFilth(Position, Map, c.InnerPawn.RaceProps.BloodDef, c.InnerPawn.LabelIndefinite(), r);
 						}
 					}
 				}
@@ -184,7 +188,7 @@ namespace ReturnToSender
 						Corpse c = Contents.innerContainer[i] as Corpse;
 						if (c != null)
 						{
-							FilthMaker.MakeFilth(Position, Map, c.InnerPawn.RaceProps.BloodDef, c.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(2,5));
+							Utilities.MakeFilth(Position, Map, c.InnerPawn.RaceProps.BloodDef, c.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(2,5));
 						}
 					}
 				}
@@ -296,7 +300,7 @@ namespace ReturnToSender
 								scMult += 1.5f;
 								aMult += 0.5f;
 							}
-							FilthMaker.MakeFilth(c.Position, Map, c.InnerPawn.RaceProps.BloodDef, c.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(5, 8));
+							Utilities.MakeFilth(c.Position, Map, c.InnerPawn.RaceProps.BloodDef, c.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(5, 8));
 						}
 						c.Destroy(DestroyMode.KillFinalize);
 					}
@@ -324,7 +328,7 @@ namespace ReturnToSender
 								aMult += 0.65f;
 							}
 
-							FilthMaker.MakeFilth(c.Position, Map, c.InnerPawn.RaceProps.BloodDef, c.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(2, 3));
+							Utilities.MakeFilth(c.Position, Map, c.InnerPawn.RaceProps.BloodDef, c.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(2, 3));
 							float eff = Rand.Range(0.5f, 0.7071067811865f);
 							Thing thing3 = null;
 							foreach (Thing pb in c.InnerPawn.ButcherProducts(c.InnerPawn, eff * eff))
@@ -354,7 +358,7 @@ namespace ReturnToSender
 							aMult += 0.5f;
 						}
 
-						FilthMaker.MakeFilth(c.Position, Map, c.InnerPawn.RaceProps.BloodDef, c.InnerPawn.LabelIndefinite(), 1);
+						Utilities.MakeFilth(c.Position, Map, c.InnerPawn.RaceProps.BloodDef, c.InnerPawn.LabelIndefinite(), 1);
 					}
 				}
 			}
@@ -362,21 +366,26 @@ namespace ReturnToSender
 
 			foreach (Pawn p in Map.mapPawns.SpawnedPawnsInFaction(Map.ParentFaction))
 			{
-				var memories = p.needs.mood.thoughts.memories;
-				UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtGeneral, genMult * 0.66667f);
-				UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtSameFaction, sfMult * 0.66667f);
-				UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtHappyCannibal, hcMult * 0.66667f);
-				UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtSadCannibal, scMult * 0.66667f);
-				UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtBloodlust, bMult * 0.66667f);
-
-				if (p.story.traits.HasTrait(TraitDefOf.Psychopath) || p.story.traits.DegreeOfTrait(TraitDefOf.Industriousness) < 0)
+				var memories = p?.needs?.mood?.thoughts?.memories;
+				if (memories != null)
 				{
-					int mult = -p.story.traits.DegreeOfTrait(TraitDefOf.Industriousness);
-					if (p.story.traits.HasTrait(TraitDefOf.Psychopath))
+					UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtGeneral, genMult * 0.66667f);
+					UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtSameFaction, sfMult * 0.66667f);
+					UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtHappyCannibal, hcMult * 0.66667f);
+					UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtSadCannibal, scMult * 0.66667f);
+					UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtBloodlust, bMult * 0.66667f);
+					if (p?.story?.traits != null)
 					{
-						mult++;
+						if (p.story.traits.HasTrait(TraitDefOf.Psychopath) || p.story.traits.DegreeOfTrait(TraitDefOf.Industriousness) < 0)
+						{
+							int mult = -p.story.traits.DegreeOfTrait(TraitDefOf.Industriousness);
+							if (p.story.traits.HasTrait(TraitDefOf.Psychopath))
+							{
+								mult++;
+							}
+							UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtAnnoyed, aMult * mult);
+						}
 					}
-					UpdateMemory(memories, RTS_DefOf.RTS_CorpseThoughtAnnoyed, aMult * mult);
 				}
 			}
 			Contents.innerContainer.ClearAndDestroyContents(DestroyMode.Vanish);

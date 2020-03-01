@@ -1,4 +1,8 @@
-﻿using Harmony;
+﻿#if VERSION_1_0
+using Harmony;
+#else
+using HarmonyLib;
+#endif
 using RimWorld;
 using RimWorld.Planet;
 using System;
@@ -32,6 +36,7 @@ namespace ReturnToSender.Harmony
 			Label branch2Resume = ilg.DefineLabel();
 			Label branch3Detour = ilg.DefineLabel();
 			Label branch3Resume = ilg.DefineLabel();
+			int foundCount = 0;
 			object compTransporterLocal = null;
 			var instructionsList = new List<CodeInstruction>(instructions);
 
@@ -47,6 +52,7 @@ namespace ReturnToSender.Harmony
 				{
 					if (instructionsList[i].opcode == OpCodes.Ldsfld && instructionsList[i].operand == ThingDefOf_ActiveDropPodField)
 					{
+						foundCount++;
 						yield return new CodeInstruction(OpCodes.Ldloc_S, compTransporterLocal);
 						yield return new CodeInstruction(OpCodes.Ldfld, CompTransporter_ParentField);
 						yield return new CodeInstruction(OpCodes.Isinst, typeof(Building_CorpsePod));
@@ -55,6 +61,7 @@ namespace ReturnToSender.Harmony
 
 					if (instructionsList[i].opcode == OpCodes.Call && instructionsList[i].operand == ThingMaker_MakeThingMethod)
 					{
+						foundCount++;
 						instructionsList[i].labels.Add(branch1Resume);
 						yield return new CodeInstruction(OpCodes.Br, branch1Resume);
 						CodeInstruction detourStart = new CodeInstruction(OpCodes.Ldsfld, RTS_DefOf_ActiveCorpsePodField);
@@ -67,6 +74,7 @@ namespace ReturnToSender.Harmony
 
 					if (instructionsList[i].opcode == OpCodes.Newobj && instructionsList[i].operand == ActiveDropPodInfoCtor)
 					{
+						foundCount++;
 						yield return new CodeInstruction(OpCodes.Ldloc_S, compTransporterLocal);
 						yield return new CodeInstruction(OpCodes.Ldfld, CompTransporter_ParentField);
 						yield return new CodeInstruction(OpCodes.Isinst, typeof(Building_CorpsePod));
@@ -83,6 +91,7 @@ namespace ReturnToSender.Harmony
 
 					if (instructionsList[i].opcode == OpCodes.Ldsfld && instructionsList[i].operand == ThingDefOf_DropPodLeaving)
 					{
+						foundCount++;
 						yield return new CodeInstruction(OpCodes.Ldloc_S, compTransporterLocal);
 						yield return new CodeInstruction(OpCodes.Ldfld, CompTransporter_ParentField);
 						yield return new CodeInstruction(OpCodes.Isinst, typeof(Building_CorpsePod));
@@ -98,6 +107,11 @@ namespace ReturnToSender.Harmony
 				}
 
 				yield return instructionsList[i];
+			}
+
+			if (foundCount != 4)
+			{
+				Log.Error("Failed to fully patch CompLaunchable.TryLaunch");
 			}
 		}
 	}

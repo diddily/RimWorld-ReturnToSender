@@ -37,7 +37,7 @@ namespace ReturnToSender
 			return ReturnToSender.Instance.PodGraphics[drawIndex].GraphicData;
 		}
 
-		public static GraphicData GetActivePodGraphicData(float fillPercent)
+		public static GraphicData GetActivePodGraphicData(float fillPercent) 
 		{
 			int drawIndex = ReturnToSender.Instance.ActivePodGraphics.Count - 1;
 			while (drawIndex > 0 && ReturnToSender.Instance.ActivePodGraphics[drawIndex].Threshold > fillPercent)
@@ -45,6 +45,15 @@ namespace ReturnToSender
 				drawIndex--;
 			}
 			return ReturnToSender.Instance.ActivePodGraphics[drawIndex].GraphicData;
+		}
+
+		public static bool MakeFilth(IntVec3 c, Map map, ThingDef filthDef, string source, int count = 1)
+		{
+#if VERSION_1_0
+			return FilthMaker.MakeFilth(c, map, filthDef, source, count);
+#else
+			return FilthMaker.TryMakeFilth(c, map, filthDef, source, count);
+#endif
 		}
 	}
 }

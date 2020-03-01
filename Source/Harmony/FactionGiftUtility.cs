@@ -1,4 +1,8 @@
-﻿using Harmony;
+﻿#if VERSION_1_0
+using Harmony;
+#else
+using HarmonyLib;
+#endif
 using RimWorld;
 using RimWorld.Planet;
 using System;
@@ -14,7 +18,11 @@ using ReturnToSender.Buildings;
 namespace ReturnToSender.Harmony
 {
 	[HarmonyPatch(typeof(FactionGiftUtility), "GetGoodwillChange")]
+#if VERSION_1_0
 	[HarmonyPatch(new Type[] { typeof(IEnumerable<IThingHolder>), typeof(SettlementBase) })]
+#else
+	[HarmonyPatch(new Type[] { typeof(IEnumerable<IThingHolder>), typeof(Settlement) })]
+#endif
 	public static class FactionGiftUtility_GetGoodwillChange
 	{
 		private static float GetFactor(Thing t)
@@ -40,7 +48,11 @@ namespace ReturnToSender.Harmony
 		}
 	}
 	[HarmonyPatch(typeof(FactionGiftUtility), "GiveGift")]
+#if VERSION_1_0
 	[HarmonyPatch(new Type[] { typeof(List<ActiveDropPodInfo>), typeof(SettlementBase) })]
+#else
+	[HarmonyPatch(new Type[] { typeof(List<ActiveDropPodInfo>), typeof(Settlement) })]
+#endif
 	public static class FactionGiftUtility_GiveGift
 	{
 		private static MethodInfo SendGiftNotAppreciatedMessageMethod = AccessTools.Method(typeof(FactionGiftUtility), "SendGiftNotAppreciatedMessage");
@@ -51,8 +63,11 @@ namespace ReturnToSender.Harmony
 			Messages.Message("RTS_MessageGiftGivenButNotAppreciated".Translate(giveTo.Name).CapitalizeFirst(), lookTarget, MessageTypeDefOf.NegativeEvent, true);
 
 		}
-
+#if VERSION_1_0
 		public static bool Prefix(List<ActiveDropPodInfo> pods, SettlementBase giveTo)
+#else
+		public static bool Prefix(List<ActiveDropPodInfo> pods, Settlement giveTo)
+#endif
 		{
 			foreach (ActiveCorpsePodInfo pod in pods.OfType<ActiveCorpsePodInfo>().Cast<ActiveCorpsePodInfo>())
 			{

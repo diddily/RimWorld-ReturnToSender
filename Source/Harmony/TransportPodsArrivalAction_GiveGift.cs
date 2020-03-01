@@ -1,4 +1,8 @@
-﻿using Harmony;
+﻿#if VERSION_1_0
+using Harmony;
+#else
+using HarmonyLib;
+#endif
 using RimWorld;
 using RimWorld.Planet;
 using System;
@@ -14,7 +18,11 @@ namespace ReturnToSender.Harmony
 	[HarmonyPatch(typeof(TransportPodsArrivalAction_GiveGift), "GetFloatMenuOptions")]
 	class TransportPodsArrivalAction_GiveGift_GetFloatMenuOptions
 	{
+#if VERSION_1_0
 		public static bool Prefix(ref IEnumerable<FloatMenuOption> __result, CompLaunchable representative, IEnumerable<IThingHolder> pods, SettlementBase settlement)
+#else
+		public static bool Prefix(ref IEnumerable<FloatMenuOption> __result, CompLaunchable representative, IEnumerable<IThingHolder> pods, Settlement settlement)
+#endif
 		{
 			if (settlement.Faction != Faction.OfPlayer && Utilities.HasCorpsePod(pods))
 			{
@@ -28,12 +36,17 @@ namespace ReturnToSender.Harmony
 	[HarmonyPatch(typeof(TransportPodsArrivalAction_GiveGift), "CanGiveGiftTo")]
 	class TransportPodsArrivalAction_GiveGift_CanGiveGiftTo
 	{
+#if VERSION_1_0
 		public static void Postfix(ref FloatMenuAcceptanceReport __result, IEnumerable<IThingHolder> pods, SettlementBase settlement)
+#else
+		public static void Postfix(ref FloatMenuAcceptanceReport __result, ref IEnumerable<IThingHolder> pods, Settlement settlement)
+#endif
 		{
 			if (!__result && Utilities.HasCorpsePod(pods))
 			{
-				__result = settlement != null && settlement.Spawned && settlement.Faction != null && settlement.Faction != Faction.OfPlayer && settlement.Faction.def.humanlikeFaction && !settlement.HasMap;
+				__result = settlement != null && settlement.Spawned && settlement.Faction != null && settlement.Faction != Faction.OfPlayer && settlement?.Faction?.def != null && settlement.Faction.def.humanlikeFaction && !settlement.HasMap;
 			}
 		}
+
 	}
 }

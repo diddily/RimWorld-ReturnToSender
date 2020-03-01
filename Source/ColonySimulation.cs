@@ -1,4 +1,8 @@
-﻿using Harmony;
+﻿#if VERSION_1_0
+using Harmony;
+#else
+using HarmonyLib;
+#endif
 using RimWorld;
 using RimWorld.BaseGen;
 using System;
@@ -26,6 +30,15 @@ namespace ReturnToSender
 			set { _verbose = value; }
 		}
 
+		public enum MapLevel
+		{
+			Location,
+			Site,
+			Outpost,
+			Settlement
+		};
+
+		static private MapLevel _highestMapLevel = MapLevel.Location;
 		static private float DamageLevelMinorRatio = 1.0f / 4.0f;
 		static private float DamageLevelMediumRatio = 2.0f / 3.0f;
 		static private float RecoveryLevelMinorRatio = 1.0f / 3.0f;
@@ -59,29 +72,46 @@ namespace ReturnToSender
 		private List<PawnInfo> currentPawns;
 		private Building_Bed restingBed;
 		private Map map;
-		private bool isSettlement;
+		private string mapName;
 		private int intervalCarry150;
 		private int intervalCarry200;
 		private int stepTicksGame;
 		private int savedTicksGame;
 
-		public ColonySimulation(Map m, bool isS)
+		public ColonySimulation(Map m)
 		{
 			map = m;
-			isSettlement = isS;
+			switch (_highestMapLevel)
+			{
+				case MapLevel.Location:
+					mapName = "RTS_Location".Translate();
+					break;
+				case MapLevel.Site:
+					mapName = "RTS_Site".Translate();
+					break;
+				case MapLevel.Outpost:
+					mapName = "RTS_Outpost".Translate();
+					break;
+				case MapLevel.Settlement:
+					mapName = "RTS_Settlement".Translate();
+					break;
+			}
+			_highestMapLevel = MapLevel.Location;
 			currentCorpses = new List<CorpseInfo>();
 			currentPawns = new List<PawnInfo>();
 			intervalCarry150 = 0;
 			intervalCarry200 = 0;
 			savedTicksGame = Find.TickManager.TicksGame;
 			// TODO: Prisoners?
-			foreach (Pawn current in map.mapPawns.SpawnedPawnsInFaction(map.ParentFaction))
+			//foreach (Pawn current in map.mapPawns.SpawnedPawnsInFaction(map.ParentFaction))
+			foreach (Pawn current in map.mapPawns.AllPawnsSpawned.Where(p => p.RaceProps.Humanlike))
 			{
 				PawnInfo pawnInfo = new PawnInfo();
 				pawnInfo.pawn = current;
 				pawnInfo.jobStatus = PawnJobStatus.Idle;
 				pawnInfo.plagueStatus = PawnPlagueStatus.Normal;
 				pawnInfo.pawn.mindState.duty = null;
+				pawnInfo.isPrisoner = current.IsPrisoner;
 				currentPawns.Add(pawnInfo);
 			}
 		}
@@ -91,6 +121,14 @@ namespace ReturnToSender
 			Normal,
 			Giblets,
 			Vaporized
+		}
+
+		public static void SetMaxMapLevel(MapLevel mapLevel)
+		{
+			if (mapLevel > _highestMapLevel)
+			{
+				_highestMapLevel = mapLevel;
+			}
 		}
 
 		public class CorpseInfo
@@ -211,12 +249,13 @@ namespace ReturnToSender
 			RanAway
 		};
 
+
 		public enum PawnPlagueStatus
 		{
 			Normal,
 			Sick,
 			Immune
-		}
+		};
 
 		public class SpawnedInfo
 		{
@@ -297,13 +336,14 @@ namespace ReturnToSender
 			public bool cooldownActive;
 			public bool deathDetected;
 			public bool corpseCleaned;
+			public bool isPrisoner;
 			public PawnPlagueStatus plagueStatus;
 
 			public bool CanBeAttacked
 			{
 				get
 				{
-					return !(pawn.Dead  || pawn.Downed || jobStatus == PawnJobStatus.RanAway);
+					return !(pawn.Dead  || pawn.Downed || jobStatus == PawnJobStatus.RanAway || isPrisoner);
 				}
 			}
 
@@ -319,7 +359,7 @@ namespace ReturnToSender
 			{
 				get
 				{
-					return pawn.Dead || pawn.Downed || jobStatus >= PawnJobStatus.MentalBreakingViolent;
+					return pawn.Dead || pawn.Downed || jobStatus >= PawnJobStatus.MentalBreakingViolent || isPrisoner;
 				}
 			}
 
@@ -684,11 +724,51 @@ namespace ReturnToSender
 			}
 		}
 			
+		public void HandleStory(string storyFormatString)
+		{
+#if VERSION_1_0
+			List<string> stories = new List<string>();
+			string story;
+#else
+			List<TaggedString> stories = new List<TaggedString>();
+			TaggedString story;
+#endif
+			while (Translator.TryTranslate(string.Format(storyFormatString, stories.Count), out story))
+			{
+				stories.Add(story);
+			}
 
-		public bool DoSimulation(bool isSettlement)
+			if (stories.Count > 0)
+			{
+				string terrainLabel = map.Biome.terrainsByFertility.MaxBy(tt => tt.max - tt.min).terrain.label;
+
+				string text = string.Format(stories.RandomElement(), mapName, terrainLabel);
+
+				LongEventHandler.ExecuteWhenFinished(delegate
+				{
+					DiaNode diaNode = new DiaNode(text);
+					Find.TickManager.CurTimeSpeed = TimeSpeed.Paused;
+					DiaOption diaOption = new DiaOption();
+					diaOption.resolveTree = true;
+					diaOption.clickSound = null;
+					diaNode.options.Add(diaOption);
+					Dialog_NodeTree dialog_NodeTree = new Dialog_NodeTree(diaNode, false, false, null);
+					dialog_NodeTree.soundClose = (SoundDefOf.Click);
+					dialog_NodeTree.closeAction = delegate
+					{
+						Find.TickManager.CurTimeSpeed = TimeSpeed.Normal;
+					};
+					Find.WindowStack.Add(dialog_NodeTree);
+					Find.Archive.Add(new ArchivedDialog(diaNode.text, null, null));
+				});
+			}
+		}
+
+		public bool DoSimulation()
 		{
 			if (currentPawns.Count() == 0)
 			{
+				HandleStory("RTS_Story_Empty_{0}");
 				return false;
 			}
 			bool allDead = false;
@@ -852,12 +932,12 @@ namespace ReturnToSender
 					{
 						if (ci.status == CorpseStatus.Vaporized)
 						{
-							FilthMaker.MakeFilth(ci.cell, map, ci.corpse.InnerPawn.RaceProps.BloodDef, ci.corpse.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(5, 8));
+							Utilities.MakeFilth(ci.cell, map, ci.corpse.InnerPawn.RaceProps.BloodDef, ci.corpse.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(5, 8));
 							ci.corpse.Destroy(DestroyMode.KillFinalize);
 						}
 						else if (ci.status == CorpseStatus.Giblets)
 						{
-							FilthMaker.MakeFilth(ci.cell, map, ci.corpse.InnerPawn.RaceProps.BloodDef, ci.corpse.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(2, 3));
+							Utilities.MakeFilth(ci.cell, map, ci.corpse.InnerPawn.RaceProps.BloodDef, ci.corpse.InnerPawn.LabelIndefinite(), Rand.RangeInclusive(2, 3));
 							float eff = Rand.Range(0.5f, 0.7071067811865f);
 							Thing thing3 = null;
 							foreach (Thing pb in ci.corpse.InnerPawn.ButcherProducts(ci.corpse.InnerPawn, eff * eff))
@@ -882,7 +962,7 @@ namespace ReturnToSender
 								spawnedStuff.Add(new SpawnedInfo(ci.corpse, ci.tick));
 							}
 
-							FilthMaker.MakeFilth(ci.corpse.Position, map, ci.corpse.InnerPawn.RaceProps.BloodDef, ci.corpse.InnerPawn.LabelIndefinite(), 1);
+							Utilities.MakeFilth(ci.corpse.Position, map, ci.corpse.InnerPawn.RaceProps.BloodDef, ci.corpse.InnerPawn.LabelIndefinite(), 1);
 						}
 					}
 
@@ -959,46 +1039,7 @@ namespace ReturnToSender
 					phaseLevel = Math.Min(phaseLevel, damageLevel);
 
 					string storyFormatString = string.Format("RTS_Story_{0}_{1}_{2}", damageLevels[damageLevel], phaseLevels[phaseLevel], "{0}");
-					List<string> stories = new List<string>();
-					string story;
-					while (Translator.TryTranslate(string.Format(storyFormatString, stories.Count), out story))
-					{
-						stories.Add(story);
-					}
-
-					if (stories.Count > 0)
-					{
-						string colonyText;
-						if (isSettlement)
-						{
-							colonyText = "RTS_Settlement".Translate();
-						}
-						else
-						{
-							colonyText = "RTS_Outpost".Translate();
-						}
-						string terrainLabel = map.Biome.terrainsByFertility.MaxBy(tt => tt.max - tt.min).terrain.label;
-
-						string text = string.Format(stories.RandomElement(), colonyText, terrainLabel);
-
-						LongEventHandler.ExecuteWhenFinished(delegate
-						{
-							DiaNode diaNode = new DiaNode(text);
-							Find.TickManager.CurTimeSpeed = TimeSpeed.Paused;
-							DiaOption diaOption = new DiaOption();
-							diaOption.resolveTree = true;
-							diaOption.clickSound = null;
-							diaNode.options.Add(diaOption);
-							Dialog_NodeTree dialog_NodeTree = new Dialog_NodeTree(diaNode, false, false, null);
-							dialog_NodeTree.soundClose = (SoundDefOf.Click);
-							dialog_NodeTree.closeAction = delegate
-							{
-								Find.TickManager.CurTimeSpeed = TimeSpeed.Normal;
-							};
-							Find.WindowStack.Add(dialog_NodeTree);
-							Find.Archive.Add(new ArchivedDialog(diaNode.text, null, null));
-						});
-					}
+					HandleStory(storyFormatString);
 				}
 
 				ReturnToSender.Instance.GetSentCorpsePodsStorage().RemoveAllPodInfoForTile(map.Tile);
@@ -1108,7 +1149,7 @@ namespace ReturnToSender
 						pi.jobStatus = PawnJobStatus.Idle;
 					}
 				}
-
+				
 				// Next we treat illnesses as best we can.
 				foreach (PawnInfo pi in currentPawns.Where(pi => !pi.IsDeadOrGone && Rand.Chance(ChancePawnSeeksMedicalRestPerHour) && HealthAIUtility.ShouldSeekMedicalRestUrgent(pi.pawn) && pi.jobStatus != PawnJobStatus.MentalBreakingViolent))
 				{
@@ -1261,7 +1302,7 @@ namespace ReturnToSender
 							pi.pawn.mindState.mentalBreaker.MentalBreakerTick();
 						}
 
-						if (pi.pawn.mindState.mentalStateHandler.CurStateDef != null && pi.jobStatus < PawnJobStatus.MentalBreakingViolent)
+						if (!pi.isPrisoner && pi.pawn.mindState.mentalStateHandler.CurStateDef != null && pi.jobStatus < PawnJobStatus.MentalBreakingViolent)
 						{
 							MentalStateDef breakDef = pi.pawn.mindState.mentalStateHandler.CurStateDef;
 							messages.Add(pi.pawn + " broke with " + breakDef.defName);
@@ -1287,7 +1328,7 @@ namespace ReturnToSender
 						Find.TickManager.DebugSetTicksGame(stepTicksGame);
 					}
 				}
-
+				
 				// Acquire targets
 				List<PawnInfo> availableTargets = new List<PawnInfo>();
 				foreach (PawnInfo pi in currentPawns)

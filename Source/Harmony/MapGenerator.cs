@@ -13,17 +13,13 @@ using Verse;
 
 namespace ReturnToSender.Harmony
 {
-	[HarmonyPatch(typeof(FogGrid), "Notify_FogBlockerRemoved")]
-	static class FogGrid_Notify_FogBlockerRemoved
+	[HarmonyPatch(typeof(MapGenerator), "GenerateMap")]
+	class MapGenerator_GenerateMap
 	{
-		public static bool Prefix()
+		public static void Postfix(ref Map __result)
 		{
-			if (ColonySimulation.CurrentSimulation != null)
-			{
-				return false;
-			}
-
-			return true;
+			ColonySimulation sim = new ColonySimulation(__result);
+			sim.DoSimulation();
 		}
 	}
 }

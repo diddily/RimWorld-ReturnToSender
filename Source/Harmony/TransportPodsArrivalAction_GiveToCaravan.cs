@@ -1,4 +1,8 @@
-﻿using Harmony;
+﻿#if VERSION_1_0
+using Harmony;
+#else
+using HarmonyLib;
+#endif
 using RimWorld;
 using RimWorld.Planet;
 using System;
@@ -11,7 +15,7 @@ using Verse;
 
 namespace ReturnToSender.Harmony
 {
-	[HarmonyPatch(typeof(TransportPodsArrivalAction_GiveToCaravan), "Arrived")]
+	/*[HarmonyPatch(typeof(TransportPodsArrivalAction_GiveToCaravan), "Arrived")]
 	class TransportPodsArrivalAction_GiveToCaravan_Arrived
 	{
 		public static IEnumerable<CodeInstruction> Transpiler(MethodBase original, IEnumerable<CodeInstruction> instructions, ILGenerator ilg)
@@ -38,5 +42,5 @@ namespace ReturnToSender.Harmony
 				yield return instructionsList[i];
 			}
 		}
-	}
+	}*/
 }

@@ -1,5 +1,9 @@
 ﻿using RimWorld;
+#if VERSION_1_0
 using Harmony;
+#else
+using HarmonyLib;
+#endif
 using HugsLib;
 using HugsLib.Utils;
 using HugsLib.Settings;
@@ -54,6 +58,7 @@ namespace ReturnToSender
 		public override void DefsLoaded()
 		{
 			base.DefsLoaded();
+			Settings.EntryName = "Return to Sender";
 			int count = 4;
 			for (int i = 0; i < count; ++i)
 			{

@@ -54,8 +54,8 @@ namespace ReturnToSender.Storage
 			base.Tick();
 			if (Find.TickManager.TicksAbs >= nextRemoveTick)
 			{
-				int removeBefore = nextRemoveTick - GenDate.TicksPerYear;
-				int nextOldest = int.MaxValue - GenDate.TicksPerYear;
+				int removeBefore = nextRemoveTick - GenDate.TicksPerYear * 7 / 2;
+				int nextOldest = int.MaxValue - GenDate.TicksPerYear * 7 / 2;
 				foreach (TileInfo info in tileInfoStorage.Values)
 				{
 					while (info.sentPods.Count() > 0)
@@ -79,7 +79,7 @@ namespace ReturnToSender.Storage
 
 				tileInfoStorage.RemoveAll(kvp => kvp.Value.sentPods.Count() == 0);
 
-				nextRemoveTick = nextOldest + GenDate.TicksPerYear;
+				nextRemoveTick = nextOldest + GenDate.TicksPerYear * 7 / 2;
 			}
 		}
 
@@ -94,9 +94,9 @@ namespace ReturnToSender.Storage
 			info.sentCorpses = corpsePod.innerContainer.ToList();
 			tileInfoStorage[tile].sentPods.Add(info);
 			
-			if (info.tickLanded + GenDate.TicksPerYear < nextRemoveTick)
+			if (info.tickLanded + GenDate.TicksPerYear * 7 / 2 < nextRemoveTick)
 			{
-				nextRemoveTick = info.tickLanded + GenDate.TicksPerYear;
+				nextRemoveTick = info.tickLanded + GenDate.TicksPerYear * 7 / 2;
 			}
 		}
 
@@ -121,7 +121,7 @@ namespace ReturnToSender.Storage
 		{
 			if (tileInfoStorage.Remove(tile))
 			{
-				int nextOldest = int.MaxValue - GenDate.TicksPerYear;
+				int nextOldest = int.MaxValue - GenDate.TicksPerYear * 7 / 2;
 				foreach (TileInfo info in tileInfoStorage.Values)
 				{
 					if (info.sentPods.Count() > 0)
@@ -135,7 +135,7 @@ namespace ReturnToSender.Storage
 					}
 				}
 
-				nextRemoveTick = nextOldest + GenDate.TicksPerYear;
+				nextRemoveTick = nextOldest + GenDate.TicksPerYear * 7 / 2;
 			}
 		}
 	}

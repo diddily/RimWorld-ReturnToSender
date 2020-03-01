@@ -1,4 +1,8 @@
-﻿using Harmony;
+﻿#if VERSION_1_0
+using Harmony;
+#else
+using HarmonyLib;
+#endif
 using RimWorld;
 using RimWorld.Planet;
 using System;
@@ -20,22 +24,24 @@ namespace ReturnToSender.Harmony
 			{
 				Log.Message("Outpost: " + string.Join(",", map.mapPawns.AllPawnsSpawned.Select(p => p.ToString()).ToArray()));
 			}
-			ColonySimulation sim = new ColonySimulation(map, false);
-			sim.DoSimulation(false);
+			ColonySimulation.SetMaxMapLevel(ColonySimulation.MapLevel.Outpost);
+			
 		}
 	}
 
-	[HarmonyPatch(typeof(GenStep_Settlement), "Generate")]
-	class GenStep_Settlement_Generate
+	[HarmonyPatch(typeof(GenStep_Scatterer), "Generate")]
+	class GenStep_Scatterer_Generate
 	{
-		public static void Postfix(ref GenStep_Settlement __instance, Map map, GenStepParams parms)
+		public static void Postfix(ref GenStep_Scatterer __instance, Map map, GenStepParams parms)
 		{
-			if (ColonySimulation.Verbose)
-			{
-				Log.Message("Settlement: " + string.Join(",", map.mapPawns.AllPawnsSpawned.Select(p => p.ToString()).ToArray()));
+			if (__instance is GenStep_Settlement)
+			{ 
+				if (ColonySimulation.Verbose)
+				{
+					Log.Message("Settlement: " + string.Join(",", map.mapPawns.AllPawnsSpawned.Select(p => p.ToString()).ToArray()));
+				}
+				ColonySimulation.SetMaxMapLevel(ColonySimulation.MapLevel.Settlement);
 			}
-			ColonySimulation sim = new ColonySimulation(map, true);
-			sim.DoSimulation(true);
 		}
 	}
 }
