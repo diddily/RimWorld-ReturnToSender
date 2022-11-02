@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Defs>
+  <ThingDef ParentName="FoodBitBase">
+	<defName>RTS_Mote_Giblets</defName>
+	<graphicData>
+		<texPath>Things/Mote/FoodBitMeat</texPath>
+		<shaderType>Mote</shaderType>
+	</graphicData>
+  </ThingDef>
+</Defs>

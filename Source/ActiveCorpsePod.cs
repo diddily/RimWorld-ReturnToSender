@@ -69,7 +69,7 @@ namespace ReturnToSender
 		}
 	}
 
-	public class CorpsePodLeaving : DropPodLeaving
+	public class CorpsePodLeaving : FlyShipLeaving
 	{
 		public override Color DrawColor
 		{

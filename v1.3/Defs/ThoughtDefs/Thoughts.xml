@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Defs>
+	<ThoughtDef>
+		<defName>RTS_CorpseThoughtGeneral</defName>
+		<thoughtClass>Thought_Memory</thoughtClass>
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
+		<nullifyingTraits>
+			<li>Psychopath</li>
+			<li>Cannibal</li>
+			<li>Bloodlust</li>
+		</nullifyingTraits>
+		<nullifyingPrecepts>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_Acceptable</li>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_Preferred</li>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_RequiredStrong</li>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_RequiredRavenous</li>
+		</nullifyingPrecepts>
+		<durationDays>3</durationDays>
+		<stackLimit>1</stackLimit>
+		<stages>
+			<li>
+				<label>corpses dropped on us</label>
+				<description>We had bodies dropped on us in a corpse pod and it is very disturbing.</description>
+				<baseMoodEffect>-1</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+	<ThoughtDef>
+		<defName>RTS_InThisTogether</defName>
+		<thoughtClass>Thought_Memory</thoughtClass>
+		<nullifyingTraits>
+			<li>Psychopath</li>
+		</nullifyingTraits>
+		<durationDays>1</durationDays>
+		<stackLimit>1</stackLimit>
+		<stages>
+			<li>
+				<label>we will get through this together</label>
+				<description>We can persevere if we work together.</description>
+				<baseMoodEffect>1</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+	<ThoughtDef>
+		<defName>RTS_CorpseThoughtSameFaction</defName>
+		<thoughtClass>Thought_Memory</thoughtClass>
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
+		<nullifyingTraits>
+			<li>Psychopath</li>
+		</nullifyingTraits>
+		<durationDays>3</durationDays>
+		<stackLimit>1</stackLimit>
+		<stages>
+			<li>
+				<label>ally corpses dropped on us</label>
+				<description>We had the bodies of our friends utterly disgraced.</description>
+				<baseMoodEffect>-1</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+	<ThoughtDef>
+		<defName>RTS_CorpseThoughtHappyCannibal</defName>
+		<thoughtClass>Thought_Memory</thoughtClass>
+		<icon>Things/Mote/ThoughtSymbol/Food</icon>
+		<durationDays>3</durationDays>
+		<stackLimit>1</stackLimit>
+		<requiredTraits>
+			<li>Cannibal</li>
+		</requiredTraits>
+		<stages>
+			<li>
+				<label>food dropped on us</label>
+				<description>We recieved manna from the heavens.</description>
+				<baseMoodEffect>1</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+	<ThoughtDef>
+		<defName>RTS_CorpseThoughtSadCannibal</defName>
+		<thoughtClass>Thought_Memory</thoughtClass>
+		<icon>Things/Mote/ThoughtSymbol/Food</icon>
+		<durationDays>3</durationDays>
+		<stackLimit>1</stackLimit>
+		<requiredTraits>
+			<li>Cannibal</li>
+		</requiredTraits>
+		<stages>
+			<li>
+				<label>inedible corpses dropped on us</label>
+				<description>What a waste of a perfectly good meal.</description>
+				<baseMoodEffect>-1</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+	<ThoughtDef>
+		<defName>RTS_CorpseThoughtBloodlust</defName>
+		<thoughtClass>Thought_Memory</thoughtClass>
+		<durationDays>3</durationDays>
+		<stackLimit>1</stackLimit>
+		<requiredTraits>
+			<li>Bloodlust</li>
+		</requiredTraits>
+		<stages>
+			<li>
+				<label>blood rains from the sky</label>
+				<description>Bloody bits everywhere makes me happy!</description>
+				<baseMoodEffect>1</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+	<ThoughtDef>
+		<defName>RTS_CorpseThoughtAnnoyed</defName>
+		
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
+		<durationDays>3</durationDays>
+		<stackLimit>1</stackLimit>
+		<nullifyingTraits>
+			<li>Bloodlust</li>
+			<li>Cannibal</li>
+		</nullifyingTraits>
+		<nullifyingPrecepts>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_Acceptable</li>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_Preferred</li>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_RequiredStrong</li>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_RequiredRavenous</li>
+		</nullifyingPrecepts>
+		<stages>
+			<li>
+				<label>have to deal with corpse dropped on us</label>
+				<description>We are going to have to clean up this mess...</description>
+				<baseMoodEffect>-1</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+	<ThoughtDef>
+		<defName>RTS_CleanedOkayCorpse</defName>
+		
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
+		<durationDays>1</durationDays>
+		<stackLimit>3</stackLimit>
+		<stackedEffectMultiplier>0.75</stackedEffectMultiplier>
+		<nullifyingTraits>
+			<li>Bloodlust</li>
+		</nullifyingTraits>
+		<stages>
+			<li>
+				<label>cleaned corpse</label>
+				<description>I had to clean a corpse up. It was disturbing.</description>
+				<baseMoodEffect>-4</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+	<ThoughtDef>
+		<defName>RTS_CleanedGrossCorpse</defName>
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
+		
+		<durationDays>1.5</durationDays>
+		<stackLimit>7</stackLimit>
+		<stackedEffectMultiplier>0.75</stackedEffectMultiplier>
+		<nullifyingTraits>
+			<li>Bloodlust</li>
+		</nullifyingTraits>
+		<stages>
+			<li>
+				<label>cleaned corpse</label>
+				<description>I had to clean a gross corpse up. It was disgusting.</description>
+				<baseMoodEffect>-8</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+	<ThoughtDef>
+		<defName>RTS_CleanedPutridCorpse</defName>
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
+		
+		<durationDays>2</durationDays>
+		<stackLimit>10</stackLimit>
+		<stackedEffectMultiplier>0.75</stackedEffectMultiplier>
+		<stages>
+			<li>
+				<label>cleaned corpse</label>
+				<description>I had to clean a putrid corpse up. I don't think I will ever feel clean again.</description>
+				<baseMoodEffect>-12</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+	<ThoughtDef>
+		<defName>RTS_ObservedLayingGibletCorpse</defName>
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
+		<showBubble>true</showBubble>
+		
+		<durationDays>0.5</durationDays>
+		<stackedEffectMultiplier>0.5</stackedEffectMultiplier>
+		<stackLimit>5</stackLimit>
+		<nullifyingTraits>
+			<li>Psychopath</li>
+			<li>Bloodlust</li>
+			<li>Cannibal</li>
+		</nullifyingTraits>
+		<nullifyingPrecepts>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_Acceptable</li>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_Preferred</li>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_RequiredStrong</li>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_RequiredRavenous</li>
+		</nullifyingPrecepts>
+		<stages>
+			<li>
+				<label>observed mangled corpse</label>
+				<description>I saw a mangled corpse laying on the ground. I could barely recognize it as human.</description>
+				<baseMoodEffect>-6</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+
+	<ThoughtDef>
+		<defName>RTS_ObservedLayingVaporizedCorpse</defName>
+		<icon>Things/Mote/ThoughtSymbol/Skull</icon>
+		<showBubble>true</showBubble>
+		
+		<durationDays>0.5</durationDays>
+		<stackedEffectMultiplier>0.5</stackedEffectMultiplier>
+		<stackLimit>5</stackLimit>
+		<nullifyingTraits>
+			<li>Psychopath</li>
+			<li>Bloodlust</li>
+			<li>Cannibal</li>
+		</nullifyingTraits>
+		<nullifyingPrecepts>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_Acceptable</li>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_Preferred</li>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_RequiredStrong</li>
+			<li MayRequire="Ludeon.RimWorld.Ideology">Cannibalism_RequiredRavenous</li>
+		</nullifyingPrecepts>
+		<stages>
+			<li>
+				<label>observed vaporized corpse</label>
+				<description>I saw a spray of blood that was all that remained of a body. What a mess!</description>
+				<baseMoodEffect>-6</baseMoodEffect>
+			</li>
+		</stages>
+	</ThoughtDef>
+</Defs>

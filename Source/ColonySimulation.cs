@@ -110,7 +110,7 @@ namespace ReturnToSender
 				pawnInfo.pawn = current;
 				pawnInfo.jobStatus = PawnJobStatus.Idle;
 				pawnInfo.plagueStatus = PawnPlagueStatus.Normal;
-				pawnInfo.pawn.mindState.duty = null;
+				//pawnInfo.pawn.mindState.duty = null;
 				pawnInfo.isPrisoner = current.IsPrisoner;
 				currentPawns.Add(pawnInfo);
 			}
@@ -218,11 +218,11 @@ namespace ReturnToSender
 				{
 					if (rot == RotStage.Fresh)
 					{
-						return ThoughtDefOf.ObservedLayingCorpse;
+						return ThoughtDef.Named("ObservedLayingCorpse");
 					}
 					else
 					{
-						return ThoughtDefOf.ObservedLayingRottingCorpse;
+						return ThoughtDef.Named("ObservedLayingRottingCorpse");
 					}
 				}
 				else if (status == CorpseStatus.Giblets)
@@ -781,24 +781,26 @@ namespace ReturnToSender
 			Current.ProgramState = ProgramState.Playing;
 			LordJob_DefendBase originalLordJob = null;
 
-			Lord originalLord = currentPawns.First().pawn.GetLord();
-			if (originalLord != null)
-			{
-				originalLordJob = originalLord.LordJob as LordJob_DefendBase;
-			}
-
-			foreach (PawnInfo pi in currentPawns)
-			{
-				Lord lord = pi.pawn.GetLord();
-				if (lord != null)
-				{
-					lord.ownedPawns.Remove(pi.pawn);
-				}
-				pi.pawn.mindState.duty = null;
-			}
+			
 
 			if (ReturnToSender.Instance.GetSentCorpsePodsStorage().TryGetPodInfoForTile(map.Tile, out podInfos))
 			{
+				Lord originalLord = currentPawns.First().pawn.GetLord();
+				if (originalLord != null)
+				{
+					originalLordJob = originalLord.LordJob as LordJob_DefendBase;
+				}
+
+				foreach (PawnInfo pi in currentPawns)
+				{
+					Lord lord = pi.pawn.GetLord();
+					if (lord != null)
+					{
+						lord.ownedPawns.Remove(pi.pawn);
+					}
+					pi.pawn.mindState.duty = null;
+				}
+
 				int firstTick = podInfos.First().tickLanded;
 				int currentTick = firstTick;
 				int numTicks = Find.TickManager.TicksAbs - currentTick;
@@ -1782,9 +1784,9 @@ namespace ReturnToSender
 
 			Vector3 drawPos = attackVerb.caster.DrawPos;
 			Projectile projectile2 = (Projectile)GenSpawn.Spawn(projectile, shootLine.Source, launcher.Map, WipeMode.Vanish);
-			if (attackVerb.verbProps.forcedMissRadius > 0.5f)
+			if (attackVerb.verbProps.ForcedMissRadius > 0.5f)
 			{
-				float num = VerbUtility.CalculateAdjustedForcedMiss(attackVerb.verbProps.forcedMissRadius, attacker.combatTarget.pawn.Position - attackVerb.caster.Position);
+				float num = VerbUtility.CalculateAdjustedForcedMiss(attackVerb.verbProps.ForcedMissRadius, attacker.combatTarget.pawn.Position - attackVerb.caster.Position);
 				if (num > 0.5f)
 				{
 					int max = GenRadial.NumCellsInRadius(num);
@@ -1801,7 +1803,7 @@ namespace ReturnToSender
 
 						projectileHitFlags &= ~ProjectileHitFlags.NonTargetPawns;
 
-						projectile2.Launch(launcher, drawPos, c, attacker.combatTarget.pawn.Position, projectileHitFlags, equipment, null);
+						projectile2.Launch(launcher, drawPos, c, attacker.combatTarget.pawn.Position, projectileHitFlags, false, equipment, null);
 						ticksToImpactField.SetValue(projectile2, 0);
 						projectile2.Position = projectile2.ExactPosition.ToIntVec3();
 						impactMethod.Invoke(projectile2, new object[] { null });
@@ -1818,7 +1820,7 @@ namespace ReturnToSender
 				shootLine.ChangeDestToMissWild(shotReport.AimOnTargetChance_StandardTarget);
 				
 				ProjectileHitFlags projectileHitFlags2 = ProjectileHitFlags.NonTargetWorld;
-				projectile2.Launch(launcher, drawPos, shootLine.Dest, attacker.combatTarget.pawn, projectileHitFlags2, equipment, targetCoverDef);
+				projectile2.Launch(launcher, drawPos, shootLine.Dest, attacker.combatTarget.pawn, projectileHitFlags2, false, equipment, targetCoverDef);
 				ticksToImpactField.SetValue(projectile2, 0);
 				projectile2.Position = projectile2.ExactPosition.ToIntVec3();
 				impactMethod.Invoke(projectile2, new object[] { null });
@@ -1828,7 +1830,7 @@ namespace ReturnToSender
 			if (!Rand.Chance(shotReport.PassCoverChance))
 			{
 				ProjectileHitFlags projectileHitFlags3 = ProjectileHitFlags.NonTargetWorld;
-				projectile2.Launch(launcher, drawPos, randomCoverToMissInto, attacker.combatTarget.pawn, projectileHitFlags3, equipment, targetCoverDef);
+				projectile2.Launch(launcher, drawPos, randomCoverToMissInto, attacker.combatTarget.pawn, projectileHitFlags3, false, equipment, targetCoverDef);
 				ticksToImpactField.SetValue(projectile2, 0);
 				projectile2.Position = projectile2.ExactPosition.ToIntVec3();
 				impactMethod.Invoke(projectile2, new object[] { randomCoverToMissInto });
@@ -1837,7 +1839,7 @@ namespace ReturnToSender
 
 			ProjectileHitFlags projectileHitFlags4 = ProjectileHitFlags.IntendedTarget;
 
-			projectile2.Launch(launcher, drawPos, attacker.combatTarget.pawn, attacker.combatTarget.pawn, projectileHitFlags4, equipment, targetCoverDef);
+			projectile2.Launch(launcher, drawPos, attacker.combatTarget.pawn, attacker.combatTarget.pawn, projectileHitFlags4, false, equipment, targetCoverDef);
 			ticksToImpactField.SetValue(projectile2, 0);
 			projectile2.Position = projectile2.ExactPosition.ToIntVec3();
 			impactMethod.Invoke(projectile2, new object[] { attacker.combatTarget.pawn });

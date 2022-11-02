@@ -16,7 +16,7 @@
     <DebugSymbols>false</DebugSymbols>
     <DebugType>none</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>..\v1.1\Assemblies\</OutputPath>
+    <OutputPath>..\v1.4\Assemblies\</OutputPath>
     <DefineConstants>
     </DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -25,22 +25,22 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>..\..\ReturnToSender - Release\v1.1\Assemblies\</OutputPath>
+    <OutputPath>..\..\ReturnToSender - Release\v1.4\Assemblies\</OutputPath>
     <DefineConstants>VERSION_1_1</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
+    <WarningLevel>0</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>..\..\v1.1\0Harmony.dll</HintPath>
+      <HintPath>..\..\v1.4\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp">
-      <HintPath>..\..\v1.1\Assembly-CSharp.dll</HintPath>
+      <HintPath>..\..\v1.4\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="HugsLib">
-      <HintPath>..\..\RimworldHugsLib\Mods\HugsLib\v1.1\Assemblies\HugsLib.dll</HintPath>
+      <HintPath>..\..\v1.4\HugsLib.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="System" />
@@ -50,15 +50,15 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="UnityEngine.CoreModule">
-      <HintPath>..\..\v1.1\UnityEngine.CoreModule.dll</HintPath>
+      <HintPath>..\..\v1.4\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.IMGUIModule">
-      <HintPath>..\..\v1.1\UnityEngine.IMGUIModule.dll</HintPath>
+      <HintPath>..\..\v1.4\UnityEngine.IMGUIModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.TextRenderingModule">
-      <HintPath>..\..\v1.1\UnityEngine.TextRenderingModule.dll</HintPath>
+      <HintPath>..\..\v1.4\UnityEngine.TextRenderingModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <None Include="..\About\**" />
@@ -99,7 +99,6 @@
     <Compile Include="Storage\SentCorpsePodsStorage.cs" />
     <Compile Include="Utilities.cs" />
   </ItemGroup>
-  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PreBuildEvent>
@@ -120,7 +119,7 @@
 echo F|xcopy "$(ProjectDir)..\LoadFolders.xml" "$(TargetDir)..\..\LoadFolders.xml" /C /Y /K /Q /D
 IF /I "$(ConfigurationName)" == "Release"; echo F|xcopy "$(ProjectDir)..\About\Preview.png" "$(TargetDir)..\..\About\Preview.png" /S /C /Y /K /Q /D
 IF /I "$(ConfigurationName)" == "Release"; IF EXIST "$(ProjectDir)..\Assemblies"; xcopy "$(ProjectDir)..\Assemblies" "$(TargetDir)..\..\Assemblies" /S /C /Y /K /I /Q /D
-IF /I "$(ConfigurationName)" == "Release"; IF EXIST "$(ProjectDir)..\v1.1"; xcopy "$(TargetDir)..\..\v1.1" "$(ProjectDir)..\v1.1" /S /C /Y /K /I /Q /D
+IF /I "$(ConfigurationName)" == "Release"; IF EXIST "$(ProjectDir)..\v1.4"; xcopy "$(TargetDir)..\..\v1.4" "$(ProjectDir)..\v1.4" /S /C /Y /K /I /Q /D
 IF /I "$(ConfigurationName)" == "Release"; IF EXIST "$(ProjectDir)..\Defs"; xcopy "$(ProjectDir)..\Defs" "$(TargetDir)..\..\Defs" /S /C /Y /K  /I /Q /D
 IF /I "$(ConfigurationName)" == "Release"; IF EXIST "$(ProjectDir)..\Patches"; xcopy "$(ProjectDir)..\Patches" "$(TargetDir)..\..\Patches" /S /C /Y /K  /I /Q /D
 IF /I "$(ConfigurationName)" == "Release"; IF EXIST "$(ProjectDir)..\Languages"; xcopy "$(ProjectDir)..\Languages" "$(TargetDir)..\..\Languages" /S /C /Y /K  /I /Q /D

@@ -112,7 +112,7 @@ namespace ReturnToSender.Storage
 			if (tileInfoStorage.TryGetValue(tile, out tmp))
 			{
 				infos = tmp.sentPods;
-				return true;
+				return infos.Count > 0;
 			}
 			return false;
 		}

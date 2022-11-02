@@ -14,6 +14,7 @@ using Verse;
 namespace ReturnToSender.Harmony
 {
 	[HarmonyPatch(typeof(RestUtility), "CurrentBed")]
+	[HarmonyPatch(new Type[] { typeof(Pawn), typeof(int?) }, new ArgumentType[] { ArgumentType.Normal, ArgumentType.Out })]
 	static class RestUtility_CurrentBed
 	{
 		public static void Postfix(ref Building_Bed __result, Pawn p)
