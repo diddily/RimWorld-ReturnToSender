@@ -894,7 +894,7 @@ namespace ReturnToSender
 								lazurus.pawn.Kill(null);
 							}
 
-							ResurrectionUtility.Resurrect(lazurus.pawn);
+							ResurrectionUtility.TryResurrect(lazurus.pawn);
 
 							revivedCount++;
 							lazurus.jobStatus = PawnJobStatus.Idle;
@@ -1817,7 +1817,7 @@ namespace ReturnToSender
 			ThingDef targetCoverDef = (randomCoverToMissInto == null) ? null : randomCoverToMissInto.def;
 			if (!Rand.Chance(shotReport.AimOnTargetChance_IgnoringPosture))
 			{
-				shootLine.ChangeDestToMissWild(shotReport.AimOnTargetChance_StandardTarget);
+				shootLine.ChangeDestToMissWild(shotReport.AimOnTargetChance_StandardTarget, launcher.Map);
 				
 				ProjectileHitFlags projectileHitFlags2 = ProjectileHitFlags.NonTargetWorld;
 				projectile2.Launch(launcher, drawPos, shootLine.Dest, attacker.combatTarget.pawn, projectileHitFlags2, false, equipment, targetCoverDef);

@@ -14,7 +14,7 @@ using Verse;
 namespace ReturnToSender.Harmony
 {
 	[HarmonyPatch(typeof(MapDrawer), "MapMeshDirty")]
-	[HarmonyPatch(new Type[] { typeof(IntVec3), typeof(MapMeshFlag), typeof(bool), typeof(bool) })]
+	[HarmonyPatch(new Type[] { typeof(IntVec3), typeof(ulong), typeof(bool), typeof(bool) })]
 	static class MapDrawer_MapMeshDirty
 	{
 		public static bool Prefix()

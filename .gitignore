@@ -256,3 +256,5 @@ __pycache__/
 *.pyc
 RimWorldAssemblies/*
 HugsLibsAssemblies/*
+v1.5/Assemblies/ReturnToSender.dll
+v1.5/Defs/ThoughtDefs/Thoughts.xml
